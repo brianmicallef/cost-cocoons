@@ -1,0 +1,160 @@
+import { useState, useEffect } from "react";
+import type { Project, Category, LineItem, Payment } from "@/types/project";
+
+const STORAGE_KEY = "building-project-data";
+
+const generateId = () => crypto.randomUUID();
+
+const loadProject = (): Project => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return { id: generateId(), name: "My Building Project", categories: [] };
+};
+
+export function useProject() {
+  const [project, setProject] = useState<Project>(loadProject);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(project));
+  }, [project]);
+
+  const updateProject = (updater: (p: Project) => Project) => {
+    setProject((prev) => updater(prev));
+  };
+
+  const setProjectName = (name: string) =>
+    updateProject((p) => ({ ...p, name }));
+
+  const addCategory = (name: string) =>
+    updateProject((p) => ({
+      ...p,
+      categories: [...p.categories, { id: generateId(), name, items: [] }],
+    }));
+
+  const updateCategory = (categoryId: string, name: string) =>
+    updateProject((p) => ({
+      ...p,
+      categories: p.categories.map((c) =>
+        c.id === categoryId ? { ...c, name } : c
+      ),
+    }));
+
+  const deleteCategory = (categoryId: string) =>
+    updateProject((p) => ({
+      ...p,
+      categories: p.categories.filter((c) => c.id !== categoryId),
+    }));
+
+  const addLineItem = (categoryId: string, name: string, predictedCost: number) =>
+    updateProject((p) => ({
+      ...p,
+      categories: p.categories.map((c) =>
+        c.id === categoryId
+          ? {
+              ...c,
+              items: [
+                ...c.items,
+                { id: generateId(), name, predictedCost, payments: [] },
+              ],
+            }
+          : c
+      ),
+    }));
+
+  const updateLineItem = (
+    categoryId: string,
+    itemId: string,
+    updates: Partial<Pick<LineItem, "name" | "predictedCost">>
+  ) =>
+    updateProject((p) => ({
+      ...p,
+      categories: p.categories.map((c) =>
+        c.id === categoryId
+          ? {
+              ...c,
+              items: c.items.map((i) =>
+                i.id === itemId ? { ...i, ...updates } : i
+              ),
+            }
+          : c
+      ),
+    }));
+
+  const deleteLineItem = (categoryId: string, itemId: string) =>
+    updateProject((p) => ({
+      ...p,
+      categories: p.categories.map((c) =>
+        c.id === categoryId
+          ? { ...c, items: c.items.filter((i) => i.id !== itemId) }
+          : c
+      ),
+    }));
+
+  const addPayment = (
+    categoryId: string,
+    itemId: string,
+    amount: number,
+    description: string,
+    date: string
+  ) =>
+    updateProject((p) => ({
+      ...p,
+      categories: p.categories.map((c) =>
+        c.id === categoryId
+          ? {
+              ...c,
+              items: c.items.map((i) =>
+                i.id === itemId
+                  ? {
+                      ...i,
+                      payments: [
+                        ...i.payments,
+                        { id: generateId(), amount, description, date },
+                      ],
+                    }
+                  : i
+              ),
+            }
+          : c
+      ),
+    }));
+
+  const deletePayment = (
+    categoryId: string,
+    itemId: string,
+    paymentId: string
+  ) =>
+    updateProject((p) => ({
+      ...p,
+      categories: p.categories.map((c) =>
+        c.id === categoryId
+          ? {
+              ...c,
+              items: c.items.map((i) =>
+                i.id === itemId
+                  ? {
+                      ...i,
+                      payments: i.payments.filter((pay) => pay.id !== paymentId),
+                    }
+                  : i
+              ),
+            }
+          : c
+      ),
+    }));
+
+  return {
+    project,
+    setProjectName,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    addLineItem,
+    updateLineItem,
+    deleteLineItem,
+    addPayment,
+    deletePayment,
+  };
+}
