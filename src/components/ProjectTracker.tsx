@@ -14,6 +14,7 @@ export function ProjectTracker() {
   const {
     project,
     addCategory,
+    bulkImport,
     updateCategory,
     updateCategoryColor,
     deleteCategory,
@@ -28,6 +29,7 @@ export function ProjectTracker() {
 
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [csvDialogOpen, setCsvDialogOpen] = useState(false);
   const [contingencyRates, setContingencyRates] = useState<Record<string, number>>(() => {
     try {
       const stored = localStorage.getItem("contingency-rates");
