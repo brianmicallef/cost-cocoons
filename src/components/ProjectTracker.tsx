@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { HardHat, Plus } from "lucide-react";
 
 const fmt = (n: number) =>
-  new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
+  new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
 
 export function ProjectTracker() {
   const {
