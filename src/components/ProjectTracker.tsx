@@ -102,7 +102,7 @@ export function ProjectTracker() {
         {/* Summary cards */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Total Budget</p>
+            <p className="text-sm text-muted-foreground">Budget</p>
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalBudget)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
@@ -110,7 +110,7 @@ export function ProjectTracker() {
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalContingency)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Budget + Contingency</p>
+            <p className="text-sm text-muted-foreground">Total Budget</p>
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalWithContingency)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
