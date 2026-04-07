@@ -13,7 +13,7 @@ interface LineItemRowProps {
   onAddPayment: (categoryId: string, itemId: string, amount: number, description: string, date: string) => void;
   onDeletePayment: (categoryId: string, itemId: string, paymentId: string) => void;
   onDeleteItem: (categoryId: string, itemId: string) => void;
-  onUpdateItem: (categoryId: string, itemId: string, updates: { name?: string; predictedCost?: number }) => void;
+  onUpdateItem: (categoryId: string, itemId: string, updates: { name?: string; predictedCost?: number; vendor?: string }) => void;
   onAddAttachment: (categoryId: string, itemId: string, name: string, url: string, type: 'link' | 'file') => void;
   onDeleteAttachment: (categoryId: string, itemId: string, attachmentId: string) => void;
 }
@@ -37,6 +37,7 @@ export function LineItemRow({
   const [attachmentOpen, setAttachmentOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(item.name);
+  const [editVendor, setEditVendor] = useState(item.vendor || "");
   const [editCost, setEditCost] = useState(String(item.predictedCost));
 
   const spent = item.payments.reduce((sum, p) => sum + p.amount, 0);
@@ -45,8 +46,9 @@ export function LineItemRow({
 
   const handleSave = () => {
     const cost = parseFloat(editCost);
-    const updates: { name?: string; predictedCost?: number } = {};
+    const updates: { name?: string; predictedCost?: number; vendor?: string } = {};
     if (editName.trim() && editName.trim() !== item.name) updates.name = editName.trim();
+    if (editVendor.trim() !== (item.vendor || "")) updates.vendor = editVendor.trim();
     if (!isNaN(cost) && cost > 0 && cost !== item.predictedCost) updates.predictedCost = cost;
     if (Object.keys(updates).length > 0) {
       onUpdateItem(categoryId, item.id, updates);
@@ -56,6 +58,7 @@ export function LineItemRow({
 
   const handleCancel = () => {
     setEditName(item.name);
+    setEditVendor(item.vendor || "");
     setEditCost(String(item.predictedCost));
     setEditing(false);
   };
@@ -81,7 +84,18 @@ export function LineItemRow({
                   if (e.key === "Escape") handleCancel();
                 }}
                 autoFocus
+                placeholder="Item name"
                 className="h-7 text-sm font-medium flex-1"
+              />
+              <Input
+                value={editVendor}
+                onChange={(e) => setEditVendor(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSave();
+                  if (e.key === "Escape") handleCancel();
+                }}
+                placeholder="Vendor"
+                className="h-7 text-sm w-32"
               />
               <div className="flex items-center gap-1">
                 <span className="text-xs text-muted-foreground">£</span>
@@ -107,11 +121,14 @@ export function LineItemRow({
             </div>
           ) : (
             <>
-              <span
-                className="font-medium text-foreground flex-1 group flex items-center gap-2 cursor-pointer"
+              <div
+                className="flex-1 group flex items-center gap-2 cursor-pointer"
                 onDoubleClick={() => setEditing(true)}
               >
-                {item.name}
+                <span className="font-medium text-foreground">{item.name}</span>
+                {item.vendor && (
+                  <span className="text-muted-foreground text-xs">· {item.vendor}</span>
+                )}
                 {item.attachments.length > 0 && (
                   <span className="text-muted-foreground text-xs flex items-center gap-0.5">
                     <Paperclip className="h-3 w-3" /> {item.attachments.length}
@@ -123,7 +140,7 @@ export function LineItemRow({
                 >
                   <Pencil className="h-3 w-3" />
                 </button>
-              </span>
+              </div>
 
               <div className="hidden sm:grid grid-cols-3 gap-6 text-sm text-right min-w-[300px]">
                 <div>

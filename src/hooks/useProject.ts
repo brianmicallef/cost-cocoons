@@ -18,6 +18,7 @@ const loadProject = (): Project => {
         items: c.items.map((item) => ({
           ...item,
           attachments: item.attachments || [],
+          vendor: item.vendor || "",
         })),
       }));
       return p;
@@ -80,7 +81,7 @@ export function useProject() {
               ...c,
               items: [
                 ...c.items,
-                { id: generateId(), name, predictedCost, payments: [], attachments: [] },
+                { id: generateId(), name, predictedCost, vendor: "", payments: [], attachments: [] },
               ],
             }
           : c
@@ -90,7 +91,7 @@ export function useProject() {
   const updateLineItem = (
     categoryId: string,
     itemId: string,
-    updates: Partial<Pick<LineItem, "name" | "predictedCost">>
+    updates: Partial<Pick<LineItem, "name" | "predictedCost" | "vendor">>
   ) =>
     updateProject((p) => ({
       ...p,
