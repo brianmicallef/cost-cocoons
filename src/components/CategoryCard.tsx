@@ -21,7 +21,7 @@ interface CategoryCardProps {
 }
 
 const fmt = (n: number) =>
-  new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
+  new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
 
 export function CategoryCard({
   category,
