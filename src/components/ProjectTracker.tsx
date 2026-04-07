@@ -12,6 +12,7 @@ export function ProjectTracker() {
   const {
     project,
     addCategory,
+    updateCategory,
     deleteCategory,
     addLineItem,
     deleteLineItem,
