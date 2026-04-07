@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useProject } from "@/hooks/useProject";
 import { CategoryCard } from "./CategoryCard";
 import { ContingencySection } from "./ContingencySection";
+import { CsvUploadDialog } from "./CsvUploadDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HardHat, Plus, AlertTriangle } from "lucide-react";
+import { HardHat, Plus, AlertTriangle, Upload } from "lucide-react";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
@@ -13,6 +14,7 @@ export function ProjectTracker() {
   const {
     project,
     addCategory,
+    bulkImport,
     updateCategory,
     updateCategoryColor,
     deleteCategory,
@@ -27,6 +29,7 @@ export function ProjectTracker() {
 
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [csvDialogOpen, setCsvDialogOpen] = useState(false);
   const [contingencyRates, setContingencyRates] = useState<Record<string, number>>(() => {
     try {
       const stored = localStorage.getItem("contingency-rates");
@@ -95,6 +98,9 @@ export function ProjectTracker() {
             <h1 className="text-xl font-bold text-foreground">{project.name}</h1>
             <p className="text-sm text-muted-foreground">Cost Tracker</p>
           </div>
+          <Button variant="outline" size="sm" onClick={() => setCsvDialogOpen(true)}>
+            <Upload className="h-4 w-4 mr-1.5" /> Import CSV
+          </Button>
         </div>
       </header>
 
@@ -220,6 +226,11 @@ export function ProjectTracker() {
             onUpdateRate={handleUpdateContingencyRate}
           />
         )}
+        <CsvUploadDialog
+          open={csvDialogOpen}
+          onOpenChange={setCsvDialogOpen}
+          onImport={bulkImport}
+        />
       </main>
     </div>
   );

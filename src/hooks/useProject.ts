@@ -223,10 +223,36 @@ export function useProject() {
       ),
     }));
 
+  const bulkImport = (rows: { category: string; item: string; cost: number; vendor: string }[]) => {
+    updateProject((p) => {
+      const updated = { ...p, categories: [...p.categories] };
+      for (const row of rows) {
+        let cat = updated.categories.find(
+          (c) => c.name.toLowerCase() === row.category.toLowerCase()
+        );
+        if (!cat) {
+          const usedColors = updated.categories.map((c) => c.color);
+          cat = { id: generateId(), name: row.category, color: getNextColor(usedColors), items: [] };
+          updated.categories.push(cat);
+        }
+        cat.items.push({
+          id: generateId(),
+          name: row.item,
+          predictedCost: row.cost,
+          vendor: row.vendor,
+          payments: [],
+          attachments: [],
+        });
+      }
+      return updated;
+    });
+  };
+
   return {
     project,
     setProjectName,
     addCategory,
+    bulkImport,
     updateCategory,
     updateCategoryColor,
     deleteCategory,
