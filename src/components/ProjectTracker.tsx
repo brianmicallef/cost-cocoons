@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useProject } from "@/hooks/useProject";
 import { CategoryCard } from "./CategoryCard";
 import { ContingencySection } from "./ContingencySection";
+import { CsvUploadDialog } from "./CsvUploadDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HardHat, Plus, AlertTriangle } from "lucide-react";
+import { HardHat, Plus, AlertTriangle, Upload } from "lucide-react";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
