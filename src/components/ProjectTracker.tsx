@@ -16,6 +16,7 @@ export function ProjectTracker() {
     deleteCategory,
     addLineItem,
     deleteLineItem,
+    updateLineItem,
     addPayment,
     deletePayment,
   } = useProject();
