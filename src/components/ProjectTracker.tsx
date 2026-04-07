@@ -98,6 +98,9 @@ export function ProjectTracker() {
             <h1 className="text-xl font-bold text-foreground">{project.name}</h1>
             <p className="text-sm text-muted-foreground">Cost Tracker</p>
           </div>
+          <Button variant="outline" size="sm" onClick={() => setCsvDialogOpen(true)}>
+            <Upload className="h-4 w-4 mr-1.5" /> Import CSV
+          </Button>
         </div>
       </header>
 
@@ -223,6 +226,11 @@ export function ProjectTracker() {
             onUpdateRate={handleUpdateContingencyRate}
           />
         )}
+        <CsvUploadDialog
+          open={csvDialogOpen}
+          onOpenChange={setCsvDialogOpen}
+          onImport={bulkImport}
+        />
       </main>
     </div>
   );
