@@ -72,7 +72,7 @@ export function useProject() {
       categories: p.categories.filter((c) => c.id !== categoryId),
     }));
 
-  const addLineItem = (categoryId: string, name: string, predictedCost: number) =>
+  const addLineItem = (categoryId: string, name: string, predictedCost: number, vendor: string = "") =>
     updateProject((p) => ({
       ...p,
       categories: p.categories.map((c) =>
@@ -81,7 +81,7 @@ export function useProject() {
               ...c,
               items: [
                 ...c.items,
-                { id: generateId(), name, predictedCost, vendor: "", payments: [], attachments: [] },
+                { id: generateId(), name, predictedCost, vendor, payments: [], attachments: [] },
               ],
             }
           : c
