@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useProject } from "@/hooks/useProject";
 import { CategoryCard } from "./CategoryCard";
+import { ContingencySection } from "./ContingencySection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HardHat, Plus } from "lucide-react";
+import { HardHat, Plus, AlertTriangle } from "lucide-react";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
@@ -26,6 +27,22 @@ export function ProjectTracker() {
 
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [contingencyRates, setContingencyRates] = useState<Record<string, number>>(() => {
+    try {
+      const stored = localStorage.getItem("contingency-rates");
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const handleUpdateContingencyRate = (categoryId: string, rate: number) => {
+    setContingencyRates((prev) => {
+      const next = { ...prev, [categoryId]: rate };
+      localStorage.setItem("contingency-rates", JSON.stringify(next));
+      return next;
+    });
+  };
 
   const handleAddCategory = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +52,7 @@ export function ProjectTracker() {
     setAddingCategory(false);
   };
 
-  // Per-category spend data for the segmented bar
+  // Per-category spend data
   const categoryData = project.categories.map((c) => {
     const budget = c.items.reduce((s, i) => s + i.predictedCost, 0);
     const spent = c.items.reduce(
@@ -47,7 +64,24 @@ export function ProjectTracker() {
 
   const totalBudget = categoryData.reduce((s, c) => s + c.budget, 0);
   const totalSpent = categoryData.reduce((s, c) => s + c.spent, 0);
-  const totalRemaining = totalBudget - totalSpent;
+
+  // Contingency calculation: (budget - spent) * rate%
+  const totalContingency = categoryData.reduce((s, c) => {
+    const rate = contingencyRates[c.id] || 0;
+    const remaining = c.budget - c.spent;
+    return s + remaining * (rate / 100);
+  }, 0);
+
+  const totalWithContingency = totalBudget + totalContingency;
+  const totalRemaining = totalWithContingency - totalSpent;
+
+  // Count items over budget
+  const overBudgetCount = project.categories.reduce((count, c) => {
+    return count + c.items.filter((i) => {
+      const itemSpent = i.payments.reduce((s, p) => s + p.amount, 0);
+      return itemSpent > i.predictedCost;
+    }).length;
+  }, 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,20 +100,36 @@ export function ProjectTracker() {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Summary cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           <div className="rounded-xl border border-border bg-card p-5">
             <p className="text-sm text-muted-foreground">Total Budget</p>
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalBudget)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Total Spent</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalSpent)}</p>
+            <p className="text-sm text-muted-foreground">Contingency</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalContingency)}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-5">
+            <p className="text-sm text-muted-foreground">Budget + Contingency</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalWithContingency)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
             <p className="text-sm text-muted-foreground">Remaining</p>
             <p className={`text-2xl font-bold mt-1 ${totalRemaining < 0 ? "text-destructive" : "text-success"}`}>
               {fmt(totalRemaining)}
             </p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-5 col-span-2 sm:col-span-1">
+            <p className="text-sm text-muted-foreground">Over Budget</p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className={`text-2xl font-bold ${overBudgetCount > 0 ? "text-destructive" : "text-success"}`}>
+                {overBudgetCount}
+              </p>
+              {overBudgetCount > 0 && <AlertTriangle className="h-5 w-5 text-destructive" />}
+              <span className="text-sm text-muted-foreground">
+                {overBudgetCount === 1 ? "item" : "items"}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -160,6 +210,15 @@ export function ProjectTracker() {
           >
             <Plus className="h-5 w-5" /> Add Category
           </button>
+        )}
+
+        {/* Contingency section - always at the bottom */}
+        {project.categories.length > 0 && (
+          <ContingencySection
+            categories={categoryData}
+            contingencyRates={contingencyRates}
+            onUpdateRate={handleUpdateContingencyRate}
+          />
         )}
       </main>
     </div>
