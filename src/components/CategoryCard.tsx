@@ -3,12 +3,14 @@ import type { Category } from "@/types/project";
 import { LineItemRow } from "./LineItemRow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X } from "lucide-react";
 
 interface CategoryCardProps {
   category: Category;
   onAddLineItem: (categoryId: string, name: string, predictedCost: number) => void;
+  onUpdateCategory: (categoryId: string, name: string) => void;
   onDeleteCategory: (categoryId: string) => void;
+  onUpdateLineItem: (categoryId: string, itemId: string, updates: { name?: string; predictedCost?: number }) => void;
   onAddPayment: (categoryId: string, itemId: string, amount: number, description: string, date: string) => void;
   onDeletePayment: (categoryId: string, itemId: string, paymentId: string) => void;
   onDeleteItem: (categoryId: string, itemId: string) => void;
@@ -20,7 +22,9 @@ const fmt = (n: number) =>
 export function CategoryCard({
   category,
   onAddLineItem,
+  onUpdateCategory,
   onDeleteCategory,
+  onUpdateLineItem,
   onAddPayment,
   onDeletePayment,
   onDeleteItem,
@@ -29,6 +33,8 @@ export function CategoryCard({
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newCost, setNewCost] = useState("");
+  const [editingName, setEditingName] = useState(false);
+  const [editName, setEditName] = useState(category.name);
 
   const totalBudget = category.items.reduce((s, i) => s + i.predictedCost, 0);
   const totalSpent = category.items.reduce(
@@ -47,6 +53,18 @@ export function CategoryCard({
     setAdding(false);
   };
 
+  const handleSaveName = () => {
+    if (editName.trim()) {
+      onUpdateCategory(category.id, editName.trim());
+    }
+    setEditingName(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditName(category.name);
+    setEditingName(false);
+  };
+
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
       {/* Header */}
@@ -57,7 +75,41 @@ export function CategoryCard({
         >
           {expanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
         </button>
-        <h2 className="text-lg font-semibold text-foreground flex-1">{category.name}</h2>
+
+        {editingName ? (
+          <div className="flex items-center gap-2 flex-1">
+            <Input
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSaveName();
+                if (e.key === "Escape") handleCancelEdit();
+              }}
+              autoFocus
+              className="h-8 text-lg font-semibold"
+            />
+            <Button size="sm" variant="ghost" onClick={handleSaveName} className="h-7 w-7 p-0 text-success">
+              <Check className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="ghost" onClick={handleCancelEdit} className="h-7 w-7 p-0 text-muted-foreground">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <h2
+            className="text-lg font-semibold text-foreground flex-1 group flex items-center gap-2 cursor-pointer"
+            onDoubleClick={() => setEditingName(true)}
+          >
+            {category.name}
+            <button
+              onClick={() => setEditingName(true)}
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          </h2>
+        )}
+
         <div className="hidden sm:flex items-center gap-6 text-sm">
           <div className="text-right">
             <span className="text-muted-foreground text-xs block">Budget</span>
@@ -112,6 +164,7 @@ export function CategoryCard({
               onAddPayment={onAddPayment}
               onDeletePayment={onDeletePayment}
               onDeleteItem={onDeleteItem}
+              onUpdateItem={onUpdateLineItem}
             />
           ))}
 
