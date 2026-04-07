@@ -3,15 +3,19 @@ import type { LineItem } from "@/types/project";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PaymentDialog } from "./PaymentDialog";
-import { ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import { AttachmentDialog } from "./AttachmentDialog";
+import { ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X, Link, Paperclip, ExternalLink } from "lucide-react";
 
 interface LineItemRowProps {
   item: LineItem;
   categoryId: string;
+  categoryColor: string;
   onAddPayment: (categoryId: string, itemId: string, amount: number, description: string, date: string) => void;
   onDeletePayment: (categoryId: string, itemId: string, paymentId: string) => void;
   onDeleteItem: (categoryId: string, itemId: string) => void;
   onUpdateItem: (categoryId: string, itemId: string, updates: { name?: string; predictedCost?: number }) => void;
+  onAddAttachment: (categoryId: string, itemId: string, name: string, url: string, type: 'link' | 'file') => void;
+  onDeleteAttachment: (categoryId: string, itemId: string, attachmentId: string) => void;
 }
 
 const fmt = (n: number) =>
@@ -20,13 +24,17 @@ const fmt = (n: number) =>
 export function LineItemRow({
   item,
   categoryId,
+  categoryColor,
   onAddPayment,
   onDeletePayment,
   onDeleteItem,
   onUpdateItem,
+  onAddAttachment,
+  onDeleteAttachment,
 }: LineItemRowProps) {
   const [expanded, setExpanded] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [attachmentOpen, setAttachmentOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(item.name);
   const [editCost, setEditCost] = useState(String(item.predictedCost));
@@ -104,6 +112,11 @@ export function LineItemRow({
                 onDoubleClick={() => setEditing(true)}
               >
                 {item.name}
+                {item.attachments.length > 0 && (
+                  <span className="text-muted-foreground text-xs flex items-center gap-0.5">
+                    <Paperclip className="h-3 w-3" /> {item.attachments.length}
+                  </span>
+                )}
                 <button
                   onClick={() => setEditing(true)}
                   className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
@@ -132,14 +145,17 @@ export function LineItemRow({
           )}
 
           {!editing && (
-            <>
-              <Button size="sm" variant="outline" onClick={() => setPaymentOpen(true)} className="ml-2">
+            <div className="flex items-center gap-1 ml-2">
+              <Button size="sm" variant="outline" onClick={() => setPaymentOpen(true)}>
                 <Plus className="h-3.5 w-3.5 mr-1" /> Payment
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setAttachmentOpen(true)} title="Add link/attachment">
+                <Link className="h-3.5 w-3.5" />
               </Button>
               <Button size="sm" variant="ghost" onClick={() => onDeleteItem(categoryId, item.id)} className="text-muted-foreground hover:text-destructive">
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
-            </>
+            </div>
           )}
         </div>
 
@@ -166,42 +182,81 @@ export function LineItemRow({
         {/* Budget bar */}
         <div className="h-1.5 bg-muted">
           <div
-            className={`h-full transition-all ${overBudget ? "bg-destructive" : "bg-success"}`}
-            style={{ width: `${Math.min((spent / item.predictedCost) * 100, 100)}%` }}
+            className="h-full transition-all"
+            style={{
+              width: `${Math.min((spent / item.predictedCost) * 100, 100)}%`,
+              backgroundColor: overBudget ? "hsl(var(--destructive))" : categoryColor,
+            }}
           />
         </div>
 
-        {expanded && item.payments.length > 0 && (
-          <div className="border-t border-border bg-muted/30">
-            <div className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Payment History
-            </div>
-            {item.payments.map((p) => (
-              <div
-                key={p.id}
-                className="flex items-center justify-between px-4 py-2 text-sm border-t border-border/50"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-muted-foreground">{p.date}</span>
-                  <span>{p.description || "Payment"}</span>
+        {expanded && (
+          <div className="border-t border-border">
+            {/* Payments */}
+            {item.payments.length > 0 && (
+              <div className="bg-muted/30">
+                <div className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Payment History
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{fmt(p.amount)}</span>
-                  <button
-                    onClick={() => onDeletePayment(categoryId, item.id, p.id)}
-                    className="text-muted-foreground hover:text-destructive transition-colors"
+                {item.payments.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between px-4 py-2 text-sm border-t border-border/50"
                   >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground">{p.date}</span>
+                      <span>{p.description || "Payment"}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{fmt(p.amount)}</span>
+                      <button
+                        onClick={() => onDeletePayment(categoryId, item.id, p.id)}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            )}
 
-        {expanded && item.payments.length === 0 && (
-          <div className="border-t border-border px-4 py-4 text-sm text-muted-foreground text-center">
-            No payments logged yet
+            {/* Attachments */}
+            {item.attachments.length > 0 && (
+              <div className="bg-muted/20 border-t border-border/50">
+                <div className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Links & Attachments
+                </div>
+                {item.attachments.map((a) => (
+                  <div
+                    key={a.id}
+                    className="flex items-center justify-between px-4 py-2 text-sm border-t border-border/50"
+                  >
+                    <a
+                      href={a.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-accent hover:underline"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      {a.name}
+                    </a>
+                    <button
+                      onClick={() => onDeleteAttachment(categoryId, item.id, a.id)}
+                      className="text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {item.payments.length === 0 && item.attachments.length === 0 && (
+              <div className="px-4 py-4 text-sm text-muted-foreground text-center">
+                No payments or attachments yet
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -212,6 +267,14 @@ export function LineItemRow({
         itemName={item.name}
         onSubmit={(amount, desc, date) =>
           onAddPayment(categoryId, item.id, amount, desc, date)
+        }
+      />
+      <AttachmentDialog
+        open={attachmentOpen}
+        onOpenChange={setAttachmentOpen}
+        itemName={item.name}
+        onSubmit={(name, url, type) =>
+          onAddAttachment(categoryId, item.id, name, url, type)
         }
       />
     </>
