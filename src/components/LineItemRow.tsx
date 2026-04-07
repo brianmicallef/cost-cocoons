@@ -146,8 +146,8 @@ export function LineItemRow({
 
           {!editing && (
             <div className="flex items-center gap-1 ml-2">
-              <Button size="sm" variant="outline" onClick={() => setPaymentOpen(true)} title="Add payment" className="h-7 w-7 p-0">
-                <Plus className="h-3.5 w-3.5" />
+              <Button size="sm" variant="outline" onClick={() => setPaymentOpen(true)} title="Add payment" className="h-7 w-7 p-0 text-xs font-semibold">
+                +£
               </Button>
               <Button size="sm" variant="outline" onClick={() => setAttachmentOpen(true)} title="Add link/attachment">
                 <Link className="h-3.5 w-3.5" />
