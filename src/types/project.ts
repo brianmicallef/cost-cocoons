@@ -1,3 +1,10 @@
+export interface Attachment {
+  id: string;
+  name: string;
+  url: string;
+  type: 'link' | 'file';
+}
+
 export interface Payment {
   id: string;
   amount: number;
@@ -10,11 +17,13 @@ export interface LineItem {
   name: string;
   predictedCost: number;
   payments: Payment[];
+  attachments: Attachment[];
 }
 
 export interface Category {
   id: string;
   name: string;
+  color: string;
   items: LineItem[];
 }
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import type { Project, Category, LineItem, Payment } from "@/types/project";
+import type { Project, Category, LineItem, Payment, Attachment } from "@/types/project";
+import { getNextColor } from "@/lib/categoryColors";
 
 const STORAGE_KEY = "building-project-data";
 
@@ -8,7 +9,19 @@ const generateId = () => crypto.randomUUID();
 const loadProject = (): Project => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
+    if (stored) {
+      const p = JSON.parse(stored) as Project;
+      // Migrate old data: add missing color/attachments
+      p.categories = p.categories.map((c, i) => ({
+        ...c,
+        color: c.color || `hsl(${(i * 137) % 360}, 65%, 55%)`,
+        items: c.items.map((item) => ({
+          ...item,
+          attachments: item.attachments || [],
+        })),
+      }));
+      return p;
+    }
   } catch {}
   return { id: generateId(), name: "My Building Project", categories: [] };
 };
@@ -27,17 +40,28 @@ export function useProject() {
   const setProjectName = (name: string) =>
     updateProject((p) => ({ ...p, name }));
 
-  const addCategory = (name: string) =>
+  const addCategory = (name: string) => {
+    const usedColors = project.categories.map((c) => c.color);
+    const color = getNextColor(usedColors);
     updateProject((p) => ({
       ...p,
-      categories: [...p.categories, { id: generateId(), name, items: [] }],
+      categories: [...p.categories, { id: generateId(), name, color, items: [] }],
     }));
+  };
 
   const updateCategory = (categoryId: string, name: string) =>
     updateProject((p) => ({
       ...p,
       categories: p.categories.map((c) =>
         c.id === categoryId ? { ...c, name } : c
+      ),
+    }));
+
+  const updateCategoryColor = (categoryId: string, color: string) =>
+    updateProject((p) => ({
+      ...p,
+      categories: p.categories.map((c) =>
+        c.id === categoryId ? { ...c, color } : c
       ),
     }));
 
@@ -56,7 +80,7 @@ export function useProject() {
               ...c,
               items: [
                 ...c.items,
-                { id: generateId(), name, predictedCost, payments: [] },
+                { id: generateId(), name, predictedCost, payments: [], attachments: [] },
               ],
             }
           : c
@@ -145,16 +169,72 @@ export function useProject() {
       ),
     }));
 
+  const addAttachment = (
+    categoryId: string,
+    itemId: string,
+    name: string,
+    url: string,
+    type: 'link' | 'file'
+  ) =>
+    updateProject((p) => ({
+      ...p,
+      categories: p.categories.map((c) =>
+        c.id === categoryId
+          ? {
+              ...c,
+              items: c.items.map((i) =>
+                i.id === itemId
+                  ? {
+                      ...i,
+                      attachments: [
+                        ...i.attachments,
+                        { id: generateId(), name, url, type },
+                      ],
+                    }
+                  : i
+              ),
+            }
+          : c
+      ),
+    }));
+
+  const deleteAttachment = (
+    categoryId: string,
+    itemId: string,
+    attachmentId: string
+  ) =>
+    updateProject((p) => ({
+      ...p,
+      categories: p.categories.map((c) =>
+        c.id === categoryId
+          ? {
+              ...c,
+              items: c.items.map((i) =>
+                i.id === itemId
+                  ? {
+                      ...i,
+                      attachments: i.attachments.filter((a) => a.id !== attachmentId),
+                    }
+                  : i
+              ),
+            }
+          : c
+      ),
+    }));
+
   return {
     project,
     setProjectName,
     addCategory,
     updateCategory,
+    updateCategoryColor,
     deleteCategory,
     addLineItem,
     updateLineItem,
     deleteLineItem,
     addPayment,
     deletePayment,
+    addAttachment,
+    deleteAttachment,
   };
 }

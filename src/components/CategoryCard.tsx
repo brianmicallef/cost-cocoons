@@ -3,17 +3,21 @@ import type { Category } from "@/types/project";
 import { LineItemRow } from "./LineItemRow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import { ColorPickerDialog } from "./ColorPickerDialog";
+import { ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X, Palette } from "lucide-react";
 
 interface CategoryCardProps {
   category: Category;
   onAddLineItem: (categoryId: string, name: string, predictedCost: number) => void;
   onUpdateCategory: (categoryId: string, name: string) => void;
+  onUpdateCategoryColor: (categoryId: string, color: string) => void;
   onDeleteCategory: (categoryId: string) => void;
   onUpdateLineItem: (categoryId: string, itemId: string, updates: { name?: string; predictedCost?: number }) => void;
   onAddPayment: (categoryId: string, itemId: string, amount: number, description: string, date: string) => void;
   onDeletePayment: (categoryId: string, itemId: string, paymentId: string) => void;
   onDeleteItem: (categoryId: string, itemId: string) => void;
+  onAddAttachment: (categoryId: string, itemId: string, name: string, url: string, type: 'link' | 'file') => void;
+  onDeleteAttachment: (categoryId: string, itemId: string, attachmentId: string) => void;
 }
 
 const fmt = (n: number) =>
@@ -23,11 +27,14 @@ export function CategoryCard({
   category,
   onAddLineItem,
   onUpdateCategory,
+  onUpdateCategoryColor,
   onDeleteCategory,
   onUpdateLineItem,
   onAddPayment,
   onDeletePayment,
   onDeleteItem,
+  onAddAttachment,
+  onDeleteAttachment,
 }: CategoryCardProps) {
   const [expanded, setExpanded] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -35,6 +42,7 @@ export function CategoryCard({
   const [newCost, setNewCost] = useState("");
   const [editingName, setEditingName] = useState(false);
   const [editName, setEditName] = useState(category.name);
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
 
   const totalBudget = category.items.reduce((s, i) => s + i.predictedCost, 0);
   const totalSpent = category.items.reduce(
@@ -67,14 +75,25 @@ export function CategoryCard({
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      {/* Color stripe */}
+      <div className="h-1.5" style={{ backgroundColor: category.color }} />
+
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-4 bg-primary/5">
+      <div className="flex items-center gap-3 px-5 py-4">
         <button
           onClick={() => setExpanded(!expanded)}
           className="text-foreground"
         >
           {expanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
         </button>
+
+        {/* Color dot + picker */}
+        <button
+          onClick={() => setColorPickerOpen(true)}
+          className="h-4 w-4 rounded-full border border-border/50 shrink-0 hover:scale-125 transition-transform"
+          style={{ backgroundColor: category.color }}
+          title="Change colour"
+        />
 
         {editingName ? (
           <div className="flex items-center gap-2 flex-1">
@@ -137,7 +156,7 @@ export function CategoryCard({
       </div>
 
       {/* Mobile totals */}
-      <div className="sm:hidden px-5 py-2 grid grid-cols-3 gap-2 text-sm text-center bg-primary/5 border-t border-border/50">
+      <div className="sm:hidden px-5 py-2 grid grid-cols-3 gap-2 text-sm text-center border-t border-border/50">
         <div>
           <span className="text-muted-foreground text-xs block">Budget</span>
           <span className="font-semibold">{fmt(totalBudget)}</span>
@@ -161,10 +180,13 @@ export function CategoryCard({
               key={item.id}
               item={item}
               categoryId={category.id}
+              categoryColor={category.color}
               onAddPayment={onAddPayment}
               onDeletePayment={onDeletePayment}
               onDeleteItem={onDeleteItem}
               onUpdateItem={onUpdateLineItem}
+              onAddAttachment={onAddAttachment}
+              onDeleteAttachment={onDeleteAttachment}
             />
           ))}
 
@@ -205,6 +227,13 @@ export function CategoryCard({
           )}
         </div>
       )}
+
+      <ColorPickerDialog
+        open={colorPickerOpen}
+        onOpenChange={setColorPickerOpen}
+        currentColor={category.color}
+        onSubmit={(color) => onUpdateCategoryColor(category.id, color)}
+      />
     </div>
   );
 }

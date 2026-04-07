@@ -13,12 +13,15 @@ export function ProjectTracker() {
     project,
     addCategory,
     updateCategory,
+    updateCategoryColor,
     deleteCategory,
     addLineItem,
     deleteLineItem,
     updateLineItem,
     addPayment,
     deletePayment,
+    addAttachment,
+    deleteAttachment,
   } = useProject();
 
   const [addingCategory, setAddingCategory] = useState(false);
@@ -32,15 +35,18 @@ export function ProjectTracker() {
     setAddingCategory(false);
   };
 
-  const totalBudget = project.categories.reduce(
-    (s, c) => s + c.items.reduce((is, i) => is + i.predictedCost, 0),
-    0
-  );
-  const totalSpent = project.categories.reduce(
-    (s, c) =>
-      s + c.items.reduce((is, i) => is + i.payments.reduce((ps, p) => ps + p.amount, 0), 0),
-    0
-  );
+  // Per-category spend data for the segmented bar
+  const categoryData = project.categories.map((c) => {
+    const budget = c.items.reduce((s, i) => s + i.predictedCost, 0);
+    const spent = c.items.reduce(
+      (s, i) => s + i.payments.reduce((ps, p) => ps + p.amount, 0),
+      0
+    );
+    return { id: c.id, name: c.name, color: c.color, budget, spent };
+  });
+
+  const totalBudget = categoryData.reduce((s, c) => s + c.budget, 0);
+  const totalSpent = categoryData.reduce((s, c) => s + c.spent, 0);
   const totalRemaining = totalBudget - totalSpent;
 
   return (
@@ -77,18 +83,36 @@ export function ProjectTracker() {
           </div>
         </div>
 
-        {/* Overall progress */}
+        {/* Overall progress - segmented by category colour */}
         {totalBudget > 0 && (
           <div className="rounded-xl border border-border bg-card p-5">
             <div className="flex justify-between text-sm mb-2">
               <span className="text-muted-foreground">Overall Spend</span>
               <span className="font-medium">{Math.round((totalSpent / totalBudget) * 100)}%</span>
             </div>
-            <div className="h-3 rounded-full bg-muted overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${totalRemaining < 0 ? "bg-destructive" : "bg-accent"}`}
-                style={{ width: `${Math.min((totalSpent / totalBudget) * 100, 100)}%` }}
-              />
+            <div className="h-3 rounded-full bg-muted overflow-hidden flex">
+              {categoryData.map((c) =>
+                c.spent > 0 ? (
+                  <div
+                    key={c.id}
+                    className="h-full transition-all first:rounded-l-full last:rounded-r-full"
+                    style={{
+                      width: `${(c.spent / totalBudget) * 100}%`,
+                      backgroundColor: c.color,
+                    }}
+                    title={`${c.name}: ${fmt(c.spent)}`}
+                  />
+                ) : null
+              )}
+            </div>
+            {/* Legend */}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
+              {categoryData.map((c) => (
+                <div key={c.id} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
+                  {c.name}
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -101,10 +125,13 @@ export function ProjectTracker() {
             onAddLineItem={addLineItem}
             onDeleteCategory={deleteCategory}
             onUpdateCategory={updateCategory}
+            onUpdateCategoryColor={updateCategoryColor}
             onUpdateLineItem={updateLineItem}
             onAddPayment={addPayment}
             onDeletePayment={deletePayment}
             onDeleteItem={deleteLineItem}
+            onAddAttachment={addAttachment}
+            onDeleteAttachment={deleteAttachment}
           />
         ))}
 
