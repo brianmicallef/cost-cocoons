@@ -100,6 +100,8 @@ export function ProjectTracker() {
             category={cat}
             onAddLineItem={addLineItem}
             onDeleteCategory={deleteCategory}
+            onUpdateCategory={updateCategory}
+            onUpdateLineItem={updateLineItem}
             onAddPayment={addPayment}
             onDeletePayment={deletePayment}
             onDeleteItem={deleteLineItem}
