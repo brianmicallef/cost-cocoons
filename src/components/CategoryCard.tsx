@@ -8,7 +8,7 @@ import { ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X, Palette } fr
 
 interface CategoryCardProps {
   category: Category;
-  onAddLineItem: (categoryId: string, name: string, predictedCost: number) => void;
+  onAddLineItem: (categoryId: string, name: string, predictedCost: number, vendor: string) => void;
   onUpdateCategory: (categoryId: string, name: string) => void;
   onUpdateCategoryColor: (categoryId: string, color: string) => void;
   onDeleteCategory: (categoryId: string) => void;
@@ -40,6 +40,7 @@ export function CategoryCard({
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newCost, setNewCost] = useState("");
+  const [newVendor, setNewVendor] = useState("");
   const [editingName, setEditingName] = useState(false);
   const [editName, setEditName] = useState(category.name);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
@@ -55,9 +56,10 @@ export function CategoryCard({
     e.preventDefault();
     const cost = parseFloat(newCost);
     if (!newName.trim() || isNaN(cost) || cost <= 0) return;
-    onAddLineItem(category.id, newName.trim(), cost);
+    onAddLineItem(category.id, newName.trim(), cost, newVendor.trim());
     setNewName("");
     setNewCost("");
+    setNewVendor("");
     setAdding(false);
   };
 
@@ -201,13 +203,21 @@ export function CategoryCard({
                   autoFocus
                 />
               </div>
+              <div className="flex-1 space-y-1">
+                <label className="text-xs text-muted-foreground">Vendor</label>
+                <Input
+                  placeholder="e.g. Smith & Sons"
+                  value={newVendor}
+                  onChange={(e) => setNewVendor(e.target.value)}
+                />
+              </div>
               <div className="w-32 space-y-1">
                 <label className="text-xs text-muted-foreground">Budget (£)</label>
                 <Input
                   type="number"
                   step="0.01"
                   min="0.01"
-                  placeholder="0.00"
+                  placeholder="0"
                   value={newCost}
                   onChange={(e) => setNewCost(e.target.value)}
                 />
