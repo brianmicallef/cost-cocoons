@@ -15,6 +15,7 @@ export interface Payment {
 export interface LineItem {
   id: string;
   name: string;
+  vendor: string;
   predictedCost: number;
   payments: Payment[];
   attachments: Attachment[];

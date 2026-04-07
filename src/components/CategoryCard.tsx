@@ -12,7 +12,7 @@ interface CategoryCardProps {
   onUpdateCategory: (categoryId: string, name: string) => void;
   onUpdateCategoryColor: (categoryId: string, color: string) => void;
   onDeleteCategory: (categoryId: string) => void;
-  onUpdateLineItem: (categoryId: string, itemId: string, updates: { name?: string; predictedCost?: number }) => void;
+  onUpdateLineItem: (categoryId: string, itemId: string, updates: { name?: string; predictedCost?: number; vendor?: string }) => void;
   onAddPayment: (categoryId: string, itemId: string, amount: number, description: string, date: string) => void;
   onDeletePayment: (categoryId: string, itemId: string, paymentId: string) => void;
   onDeleteItem: (categoryId: string, itemId: string) => void;
