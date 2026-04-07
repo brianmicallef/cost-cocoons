@@ -12,9 +12,11 @@ export function ProjectTracker() {
   const {
     project,
     addCategory,
+    updateCategory,
     deleteCategory,
     addLineItem,
     deleteLineItem,
+    updateLineItem,
     addPayment,
     deletePayment,
   } = useProject();
@@ -98,6 +100,8 @@ export function ProjectTracker() {
             category={cat}
             onAddLineItem={addLineItem}
             onDeleteCategory={deleteCategory}
+            onUpdateCategory={updateCategory}
+            onUpdateLineItem={updateLineItem}
             onAddPayment={addPayment}
             onDeletePayment={deletePayment}
             onDeleteItem={deleteLineItem}
