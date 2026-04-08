@@ -55,6 +55,26 @@ export function ProjectTracker() {
     setAddingCategory(false);
   };
 
+  // When project categories change, set default 10% for any new ones
+  const ensureDefaultContingency = () => {
+    let updated = false;
+    const next = { ...contingencyRates };
+    for (const cat of project.categories) {
+      if (!(cat.id in next)) {
+        next[cat.id] = 10;
+        updated = true;
+      }
+    }
+    if (updated) {
+      localStorage.setItem("contingency-rates", JSON.stringify(next));
+      setContingencyRates(next);
+    }
+  };
+
+  // Run after each render where categories may have changed
+  import { useEffect } from "react";
+
+
   // Per-category spend data
   const categoryData = project.categories.map((c) => {
     const budget = c.items.reduce((s, i) => s + i.predictedCost, 0);
