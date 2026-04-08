@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useProject } from "@/hooks/useProject";
 import { CategoryCard } from "./CategoryCard";
 import { ContingencySection } from "./ContingencySection";
 import { CsvUploadDialog } from "./CsvUploadDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HardHat, Plus, AlertTriangle, Upload } from "lucide-react";
+import { HardHat, Plus, AlertTriangle, Upload, Download } from "lucide-react";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
@@ -39,6 +39,22 @@ export function ProjectTracker() {
     }
   });
 
+  // Default 10% contingency for any new category
+  useEffect(() => {
+    let updated = false;
+    const next = { ...contingencyRates };
+    for (const cat of project.categories) {
+      if (!(cat.id in next)) {
+        next[cat.id] = 10;
+        updated = true;
+      }
+    }
+    if (updated) {
+      localStorage.setItem("contingency-rates", JSON.stringify(next));
+      setContingencyRates(next);
+    }
+  }, [project.categories]);
+
   const handleUpdateContingencyRate = (categoryId: string, rate: number) => {
     setContingencyRates((prev) => {
       const next = { ...prev, [categoryId]: rate };
@@ -55,26 +71,6 @@ export function ProjectTracker() {
     setAddingCategory(false);
   };
 
-  // When project categories change, set default 10% for any new ones
-  const ensureDefaultContingency = () => {
-    let updated = false;
-    const next = { ...contingencyRates };
-    for (const cat of project.categories) {
-      if (!(cat.id in next)) {
-        next[cat.id] = 10;
-        updated = true;
-      }
-    }
-    if (updated) {
-      localStorage.setItem("contingency-rates", JSON.stringify(next));
-      setContingencyRates(next);
-    }
-  };
-
-  // Run after each render where categories may have changed
-  import { useEffect } from "react";
-
-
   // Per-category spend data
   const categoryData = project.categories.map((c) => {
     const budget = c.items.reduce((s, i) => s + i.predictedCost, 0);
@@ -88,7 +84,6 @@ export function ProjectTracker() {
   const totalBudget = categoryData.reduce((s, c) => s + c.budget, 0);
   const totalSpent = categoryData.reduce((s, c) => s + c.spent, 0);
 
-  // Contingency calculation: (budget - spent) * rate%
   const totalContingency = categoryData.reduce((s, c) => {
     const rate = contingencyRates[c.id] || 0;
     const remaining = c.budget - c.spent;
@@ -98,13 +93,56 @@ export function ProjectTracker() {
   const totalWithContingency = totalBudget + totalContingency;
   const totalRemaining = totalWithContingency - totalSpent;
 
-  // Count items over budget
   const overBudgetCount = project.categories.reduce((count, c) => {
     return count + c.items.filter((i) => {
       const itemSpent = i.payments.reduce((s, p) => s + p.amount, 0);
       return itemSpent > i.predictedCost;
     }).length;
   }, 0);
+
+  // CSV Export
+  const handleExport = () => {
+    const escCsv = (s: string) => {
+      if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+        return `"${s.replace(/"/g, '""')}"`;
+      }
+      return s;
+    };
+    const lines = ["Category,Item,Budget,Paid to Date,Vendor,Notes / Links"];
+    for (const cat of project.categories) {
+      for (const item of cat.items) {
+        const paidToDate = item.payments.reduce((s, p) => s + p.amount, 0);
+        const notes: string[] = [];
+        if (item.payments.length > 0) {
+          notes.push(item.payments.map((p) => `${p.description} (${fmt(p.amount)})`).join("; "));
+        }
+        if (item.attachments.length > 0) {
+          notes.push(item.attachments.map((a) => `${a.name}: ${a.url}`).join("; "));
+        }
+        lines.push(
+          [
+            escCsv(cat.name),
+            escCsv(item.name),
+            item.predictedCost.toString(),
+            paidToDate.toString(),
+            escCsv(item.vendor),
+            escCsv(notes.join(" | ")),
+          ].join(",")
+        );
+      }
+    }
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${project.name.replace(/\s+/g, "_")}_export.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // For the progress bars
+  const spendPctOfBudget = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+  const spendPctOfTotal = totalWithContingency > 0 ? (totalSpent / totalWithContingency) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -118,9 +156,14 @@ export function ProjectTracker() {
             <h1 className="text-xl font-bold text-foreground">{project.name}</h1>
             <p className="text-sm text-muted-foreground">Cost Tracker</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setCsvDialogOpen(true)}>
-            <Upload className="h-4 w-4 mr-1.5" /> Import CSV
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setCsvDialogOpen(true)}>
+              <Upload className="h-4 w-4 mr-1.5" /> Import
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <Download className="h-4 w-4 mr-1.5" /> Export
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -159,30 +202,61 @@ export function ProjectTracker() {
           </div>
         </div>
 
-        {/* Overall progress - segmented by category colour */}
+        {/* Overall progress - two bars showing spend vs budget and spend vs total (with contingency) */}
         {totalBudget > 0 && (
-          <div className="rounded-xl border border-border bg-card p-5">
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-muted-foreground">Overall Spend</span>
-              <span className="font-medium">{Math.round((totalSpent / totalBudget) * 100)}%</span>
+          <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+            {/* Spend vs Budget (without contingency) */}
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-muted-foreground">Spend vs Budget</span>
+                <span className="font-medium">
+                  {fmt(totalSpent)} / {fmt(totalBudget)} ({Math.round(spendPctOfBudget)}%)
+                </span>
+              </div>
+              <div className="h-3 rounded-full bg-muted overflow-hidden flex">
+                {categoryData.map((c) =>
+                  c.spent > 0 ? (
+                    <div
+                      key={c.id}
+                      className="h-full transition-all first:rounded-l-full last:rounded-r-full"
+                      style={{
+                        width: `${(c.spent / totalBudget) * 100}%`,
+                        backgroundColor: c.color,
+                      }}
+                      title={`${c.name}: ${fmt(c.spent)}`}
+                    />
+                  ) : null
+                )}
+              </div>
             </div>
-            <div className="h-3 rounded-full bg-muted overflow-hidden flex">
-              {categoryData.map((c) =>
-                c.spent > 0 ? (
-                  <div
-                    key={c.id}
-                    className="h-full transition-all first:rounded-l-full last:rounded-r-full"
-                    style={{
-                      width: `${(c.spent / totalBudget) * 100}%`,
-                      backgroundColor: c.color,
-                    }}
-                    title={`${c.name}: ${fmt(c.spent)}`}
-                  />
-                ) : null
-              )}
+
+            {/* Spend vs Total Budget (with contingency) */}
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-muted-foreground">Spend vs Total Budget (incl. contingency)</span>
+                <span className="font-medium">
+                  {fmt(totalSpent)} / {fmt(totalWithContingency)} ({Math.round(spendPctOfTotal)}%)
+                </span>
+              </div>
+              <div className="h-3 rounded-full bg-muted overflow-hidden flex">
+                {categoryData.map((c) =>
+                  c.spent > 0 ? (
+                    <div
+                      key={c.id}
+                      className="h-full transition-all first:rounded-l-full last:rounded-r-full"
+                      style={{
+                        width: `${(c.spent / totalWithContingency) * 100}%`,
+                        backgroundColor: c.color,
+                      }}
+                      title={`${c.name}: ${fmt(c.spent)}`}
+                    />
+                  ) : null
+                )}
+              </div>
             </div>
+
             {/* Legend */}
-            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
               {categoryData.map((c) => (
                 <div key={c.id} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
@@ -238,7 +312,7 @@ export function ProjectTracker() {
           </button>
         )}
 
-        {/* Contingency section - always at the bottom */}
+        {/* Contingency section */}
         {project.categories.length > 0 && (
           <ContingencySection
             categories={categoryData}
