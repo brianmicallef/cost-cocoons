@@ -194,7 +194,7 @@ export function ProjectTracker() {
           </div>
           <div className="flex-1">
             <h1 className="text-xl font-bold text-foreground">{project.name}</h1>
-            <p className="text-sm text-muted-foreground">Cost Tracker</p>
+            <p className="text-sm text-muted-foreground">Cost Tracker v0.1</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setCsvDialogOpen(true)}>

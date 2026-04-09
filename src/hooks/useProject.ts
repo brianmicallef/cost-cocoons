@@ -19,7 +19,7 @@ const migrateProject = (p: Project): Project => ({
 
 const defaultProject = (): Project => ({
   id: generateId(),
-  name: "My Building Project",
+  name: "Roebuck Lane",
   categories: [],
 });
 
