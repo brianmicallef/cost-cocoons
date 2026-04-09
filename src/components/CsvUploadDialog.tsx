@@ -55,7 +55,9 @@ function parseCsv(text: string): ParsedRow[] {
 
     const category = parts[0];
     const item = parts[1];
-    const cost = parseFloat(parts[2]);
+    // Strip currency symbols (£$€) and commas before parsing
+    const costRaw = parts[2].replace(/[£$€,]/g, "");
+    const cost = parseFloat(costRaw);
     const vendor = parts[3] || "";
 
     if (!category || !item || isNaN(cost)) continue;
