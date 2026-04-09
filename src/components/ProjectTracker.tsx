@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useProject } from "@/hooks/useProject";
 import { CategoryCard } from "./CategoryCard";
 import { ContingencySection } from "./ContingencySection";
@@ -13,6 +13,7 @@ const fmt = (n: number) =>
 export function ProjectTracker() {
   const {
     project,
+    loading,
     addCategory,
     bulkImport,
     updateCategory,
@@ -30,17 +31,28 @@ export function ProjectTracker() {
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [csvDialogOpen, setCsvDialogOpen] = useState(false);
-  const [contingencyRates, setContingencyRates] = useState<Record<string, number>>(() => {
-    try {
-      const stored = localStorage.getItem("contingency-rates");
-      return stored ? JSON.parse(stored) : {};
-    } catch {
-      return {};
-    }
-  });
+  const [contingencyRates, setContingencyRates] = useState<Record<string, number>>({});
+  const contingencyLoadedRef = useRef(false);
+  const contingencySaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load contingency rates from API on mount
+  useEffect(() => {
+    fetch("/.netlify/functions/contingency")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && typeof data === "object") {
+          setContingencyRates(data);
+        }
+        contingencyLoadedRef.current = true;
+      })
+      .catch(() => {
+        contingencyLoadedRef.current = true;
+      });
+  }, []);
 
   // Default 10% contingency for any new category
   useEffect(() => {
+    if (!contingencyLoadedRef.current) return;
     let updated = false;
     const next = { ...contingencyRates };
     for (const cat of project.categories) {
@@ -50,17 +62,32 @@ export function ProjectTracker() {
       }
     }
     if (updated) {
-      localStorage.setItem("contingency-rates", JSON.stringify(next));
       setContingencyRates(next);
     }
   }, [project.categories]);
 
+  // Save contingency rates to API (debounced)
+  useEffect(() => {
+    if (!contingencyLoadedRef.current) return;
+    if (contingencySaveTimeoutRef.current) {
+      clearTimeout(contingencySaveTimeoutRef.current);
+    }
+    contingencySaveTimeoutRef.current = setTimeout(() => {
+      fetch("/.netlify/functions/contingency", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(contingencyRates),
+      }).catch(() => {});
+    }, 500);
+    return () => {
+      if (contingencySaveTimeoutRef.current) {
+        clearTimeout(contingencySaveTimeoutRef.current);
+      }
+    };
+  }, [contingencyRates]);
+
   const handleUpdateContingencyRate = (categoryId: string, rate: number) => {
-    setContingencyRates((prev) => {
-      const next = { ...prev, [categoryId]: rate };
-      localStorage.setItem("contingency-rates", JSON.stringify(next));
-      return next;
-    });
+    setContingencyRates((prev) => ({ ...prev, [categoryId]: rate }));
   };
 
   const handleAddCategory = (e: React.FormEvent) => {
@@ -144,6 +171,19 @@ export function ProjectTracker() {
   const spendPctOfBudget = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
   const spendPctOfTotal = totalWithContingency > 0 ? (totalSpent / totalWithContingency) * 100 : 0;
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center mx-auto animate-pulse">
+            <HardHat className="h-5 w-5 text-accent-foreground" />
+          </div>
+          <p className="text-muted-foreground text-sm">Loading project data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -154,7 +194,7 @@ export function ProjectTracker() {
           </div>
           <div className="flex-1">
             <h1 className="text-xl font-bold text-foreground">{project.name}</h1>
-            <p className="text-sm text-muted-foreground">Cost Tracker</p>
+            <p className="text-sm text-muted-foreground">Cost Tracker v0.1</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setCsvDialogOpen(true)}>

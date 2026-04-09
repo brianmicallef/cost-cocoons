@@ -1,37 +1,71 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Project, Category, LineItem, Payment, Attachment } from "@/types/project";
 import { getNextColor } from "@/lib/categoryColors";
 
-const STORAGE_KEY = "building-project-data";
-
 const generateId = () => crypto.randomUUID();
 
-const loadProject = (): Project => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const p = JSON.parse(stored) as Project;
-      // Migrate old data: add missing color/attachments
-      p.categories = p.categories.map((c, i) => ({
-        ...c,
-        color: c.color || `hsl(${(i * 137) % 360}, 65%, 55%)`,
-        items: c.items.map((item) => ({
-          ...item,
-          attachments: item.attachments || [],
-          vendor: item.vendor || "",
-        })),
-      }));
-      return p;
-    }
-  } catch {}
-  return { id: generateId(), name: "My Building Project", categories: [] };
-};
+const migrateProject = (p: Project): Project => ({
+  ...p,
+  categories: p.categories.map((c, i) => ({
+    ...c,
+    color: c.color || `hsl(${(i * 137) % 360}, 65%, 55%)`,
+    items: c.items.map((item) => ({
+      ...item,
+      attachments: item.attachments || [],
+      vendor: item.vendor || "",
+    })),
+  })),
+});
+
+const defaultProject = (): Project => ({
+  id: generateId(),
+  name: "Roebuck Lane",
+  categories: [],
+});
 
 export function useProject() {
-  const [project, setProject] = useState<Project>(loadProject);
+  const [project, setProject] = useState<Project>(defaultProject);
+  const [loading, setLoading] = useState(true);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialLoadDone = useRef(false);
 
+  // Load project from API on mount
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(project));
+    fetch("/.netlify/functions/project")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.id) {
+          setProject(migrateProject(data));
+        }
+        initialLoadDone.current = true;
+        setLoading(false);
+      })
+      .catch(() => {
+        initialLoadDone.current = true;
+        setLoading(false);
+      });
+  }, []);
+
+  // Save project to API (debounced) whenever it changes
+  useEffect(() => {
+    if (!initialLoadDone.current) return;
+
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(() => {
+      fetch("/.netlify/functions/project", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(project),
+      }).catch(() => {});
+    }, 500);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
   }, [project]);
 
   const updateProject = (updater: (p: Project) => Project) => {
@@ -250,6 +284,7 @@ export function useProject() {
 
   return {
     project,
+    loading,
     setProjectName,
     addCategory,
     bulkImport,
