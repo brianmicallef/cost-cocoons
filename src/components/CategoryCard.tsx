@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Category } from "@/types/project";
 import { LineItemRow } from "./LineItemRow";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,8 @@ import { ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X, Palette } fr
 
 interface CategoryCardProps {
   category: Category;
+  forceExpanded?: boolean;
+  collapseSignal?: number;
   onAddLineItem: (categoryId: string, name: string, predictedCost: number, vendor: string) => void;
   onUpdateCategory: (categoryId: string, name: string) => void;
   onUpdateCategoryColor: (categoryId: string, color: string) => void;
@@ -25,6 +27,8 @@ const fmt = (n: number) =>
 
 export function CategoryCard({
   category,
+  forceExpanded,
+  collapseSignal,
   onAddLineItem,
   onUpdateCategory,
   onUpdateCategoryColor,
@@ -37,6 +41,12 @@ export function CategoryCard({
   onDeleteAttachment,
 }: CategoryCardProps) {
   const [expanded, setExpanded] = useState(true);
+
+  useEffect(() => {
+    if (collapseSignal !== undefined && forceExpanded !== undefined) {
+      setExpanded(forceExpanded);
+    }
+  }, [collapseSignal]);
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newCost, setNewCost] = useState("");
