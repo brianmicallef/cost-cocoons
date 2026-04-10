@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HardHat, Lock } from "lucide-react";
+import { House, Lock } from "lucide-react";
 
 const PASSCODE = "ABCE12";
 
@@ -29,7 +29,7 @@ export function PasswordGate({ children }: { children: React.ReactNode }) {
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 p-6 rounded-xl border border-border bg-card">
         <div className="flex flex-col items-center gap-2">
           <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center">
-            <HardHat className="h-5 w-5 text-accent-foreground" />
+            <House className="h-5 w-5 text-accent-foreground" />
           </div>
           <h2 className="text-lg font-bold text-foreground">Roebuck Lane</h2>
           <p className="text-sm text-muted-foreground flex items-center gap-1.5">

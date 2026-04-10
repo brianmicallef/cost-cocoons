@@ -6,7 +6,7 @@ import { CsvUploadDialog } from "./CsvUploadDialog";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HardHat, Plus, AlertTriangle, Upload, Download, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
+import { House, Plus, AlertTriangle, Upload, Download, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
@@ -159,7 +159,7 @@ export function ProjectTracker() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-3">
           <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center mx-auto animate-pulse">
-            <HardHat className="h-5 w-5 text-accent-foreground" />
+            <House className="h-5 w-5 text-accent-foreground" />
           </div>
           <p className="text-muted-foreground text-sm">Loading project data...</p>
         </div>
@@ -173,7 +173,7 @@ export function ProjectTracker() {
       <header className="border-b border-border bg-card sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center">
-            <HardHat className="h-5 w-5 text-accent-foreground" />
+            <House className="h-5 w-5 text-accent-foreground" />
           </div>
           <div className="flex-1">
             <h1 className="text-xl font-bold text-foreground">{project.name}</h1>
