@@ -13,6 +13,7 @@ const migrateProject = (p: Project): Project => ({
       ...item,
       attachments: item.attachments || [],
       vendor: item.vendor || "",
+      completed: item.completed || false,
     })),
   })),
 });
@@ -135,6 +136,21 @@ export function useProject() {
               ...c,
               items: c.items.map((i) =>
                 i.id === itemId ? { ...i, ...updates } : i
+              ),
+            }
+          : c
+      ),
+    }));
+
+  const toggleLineItemComplete = (categoryId: string, itemId: string) =>
+    updateProject((p) => ({
+      ...p,
+      categories: p.categories.map((c) =>
+        c.id === categoryId
+          ? {
+              ...c,
+              items: c.items.map((i) =>
+                i.id === itemId ? { ...i, completed: !i.completed } : i
               ),
             }
           : c
@@ -324,6 +340,7 @@ export function useProject() {
     deleteCategory,
     addLineItem,
     updateLineItem,
+    toggleLineItemComplete,
     deleteLineItem,
     addPayment,
     deletePayment,
