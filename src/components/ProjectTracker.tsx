@@ -3,9 +3,10 @@ import { useProject } from "@/hooks/useProject";
 import { CategoryCard } from "./CategoryCard";
 import { ContingencySection } from "./ContingencySection";
 import { CsvUploadDialog } from "./CsvUploadDialog";
+import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HardHat, Plus, AlertTriangle, Upload, Download } from "lucide-react";
+import { HardHat, Plus, AlertTriangle, Upload, Download, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
@@ -31,6 +32,8 @@ export function ProjectTracker() {
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [csvDialogOpen, setCsvDialogOpen] = useState(false);
+  const [allExpanded, setAllExpanded] = useState(true);
+  const [collapseSignal, setCollapseSignal] = useState(0);
   const [contingencyRates, setContingencyRates] = useState<Record<string, number>>({});
   const contingencyLoadedRef = useRef(false);
   const contingencySaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -197,6 +200,7 @@ export function ProjectTracker() {
             <p className="text-sm text-muted-foreground">Cost Tracker v0.1</p>
           </div>
           <div className="flex gap-2">
+            <ThemeToggle />
             <Button variant="outline" size="sm" onClick={() => setCsvDialogOpen(true)}>
               <Upload className="h-4 w-4 mr-1.5" /> Import
             </Button>
@@ -307,11 +311,32 @@ export function ProjectTracker() {
           </div>
         )}
 
-        {/* Categories */}
+        {/* Categories header with collapse toggle */}
+        {project.categories.length > 0 && (
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setAllExpanded(!allExpanded);
+                setCollapseSignal((s) => s + 1);
+              }}
+            >
+              {allExpanded ? (
+                <><ChevronsDownUp className="h-4 w-4 mr-1.5" /> Collapse All</>
+              ) : (
+                <><ChevronsUpDown className="h-4 w-4 mr-1.5" /> Expand All</>
+              )}
+            </Button>
+          </div>
+        )}
+
         {project.categories.map((cat) => (
           <CategoryCard
             key={cat.id}
             category={cat}
+            forceExpanded={allExpanded}
+            collapseSignal={collapseSignal}
             onAddLineItem={addLineItem}
             onDeleteCategory={deleteCategory}
             onUpdateCategory={updateCategory}
