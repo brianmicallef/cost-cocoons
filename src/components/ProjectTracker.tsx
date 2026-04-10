@@ -17,6 +17,7 @@ export function ProjectTracker() {
     loading,
     addCategory,
     bulkImport,
+    fullImport,
     updateCategory,
     updateCategoryColor,
     deleteCategory,
