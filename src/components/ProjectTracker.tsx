@@ -368,6 +368,7 @@ export function ProjectTracker() {
           open={csvDialogOpen}
           onOpenChange={setCsvDialogOpen}
           onImport={bulkImport}
+          onFullImport={fullImport}
         />
       </main>
     </div>
