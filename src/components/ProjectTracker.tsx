@@ -17,6 +17,7 @@ export function ProjectTracker() {
     loading,
     addCategory,
     bulkImport,
+    fullImport,
     updateCategory,
     updateCategoryColor,
     deleteCategory,
@@ -130,42 +131,21 @@ export function ProjectTracker() {
     }).length;
   }, 0);
 
-  // CSV Export
+  // JSON Export (full fidelity)
   const handleExport = () => {
-    const escCsv = (s: string) => {
-      if (s.includes(",") || s.includes('"') || s.includes("\n")) {
-        return `"${s.replace(/"/g, '""')}"`;
-      }
-      return s;
+    const exportData = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      project: {
+        name: project.name,
+        categories: project.categories,
+      },
     };
-    const lines = ["Category,Item,Budget,Paid to Date,Vendor,Notes / Links"];
-    for (const cat of project.categories) {
-      for (const item of cat.items) {
-        const paidToDate = item.payments.reduce((s, p) => s + p.amount, 0);
-        const notes: string[] = [];
-        if (item.payments.length > 0) {
-          notes.push(item.payments.map((p) => `${p.description} (${fmt(p.amount)})`).join("; "));
-        }
-        if (item.attachments.length > 0) {
-          notes.push(item.attachments.map((a) => `${a.name}: ${a.url}`).join("; "));
-        }
-        lines.push(
-          [
-            escCsv(cat.name),
-            escCsv(item.name),
-            item.predictedCost.toString(),
-            paidToDate.toString(),
-            escCsv(item.vendor),
-            escCsv(notes.join(" | ")),
-          ].join(",")
-        );
-      }
-    }
-    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${project.name.replace(/\s+/g, "_")}_export.csv`;
+    a.download = `${project.name.replace(/\s+/g, "_")}_export.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -389,6 +369,7 @@ export function ProjectTracker() {
           open={csvDialogOpen}
           onOpenChange={setCsvDialogOpen}
           onImport={bulkImport}
+          onFullImport={fullImport}
         />
       </main>
     </div>

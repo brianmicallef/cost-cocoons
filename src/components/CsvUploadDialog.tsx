@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
+import type { Category } from "@/types/project";
 
 interface ParsedRow {
   category: string;
@@ -18,10 +19,11 @@ interface ParsedRow {
   vendor: string;
 }
 
-interface CsvUploadDialogProps {
+interface ImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onImport: (rows: ParsedRow[]) => void;
+  onFullImport: (categories: Category[]) => void;
 }
 
 function parseCsv(text: string): ParsedRow[] {
@@ -32,10 +34,8 @@ function parseCsv(text: string): ParsedRow[] {
 
   if (lines.length < 2) return [];
 
-  // Skip header row
   const rows: ParsedRow[] = [];
   for (let i = 1; i < lines.length; i++) {
-    // Handle quoted CSV fields
     const parts: string[] = [];
     let current = "";
     let inQuotes = false;
@@ -55,7 +55,6 @@ function parseCsv(text: string): ParsedRow[] {
 
     const category = parts[0];
     const item = parts[1];
-    // Strip currency symbols (£$€) and commas before parsing
     const costRaw = parts[2].replace(/[£$€,]/g, "");
     const cost = parseFloat(costRaw);
     const vendor = parts[3] || "";
@@ -67,8 +66,39 @@ function parseCsv(text: string): ParsedRow[] {
   return rows;
 }
 
-export function CsvUploadDialog({ open, onOpenChange, onImport }: CsvUploadDialogProps) {
-  const [rows, setRows] = useState<ParsedRow[]>([]);
+type ImportMode = null | "csv" | "json";
+
+interface JsonImportData {
+  categories: Category[];
+  summary: { categories: number; items: number; payments: number; attachments: number };
+}
+
+function parseJsonImport(text: string): JsonImportData | null {
+  try {
+    const data = JSON.parse(text);
+    // Support our export format
+    const categories: Category[] = data?.project?.categories || data?.categories;
+    if (!Array.isArray(categories)) return null;
+
+    let items = 0, payments = 0, attachments = 0;
+    for (const cat of categories) {
+      if (!cat.name || !Array.isArray(cat.items)) return null;
+      items += cat.items.length;
+      for (const item of cat.items) {
+        payments += (item.payments || []).length;
+        attachments += (item.attachments || []).length;
+      }
+    }
+    return { categories, summary: { categories: categories.length, items, payments, attachments } };
+  } catch {
+    return null;
+  }
+}
+
+export function CsvUploadDialog({ open, onOpenChange, onImport, onFullImport }: ImportDialogProps) {
+  const [csvRows, setCsvRows] = useState<ParsedRow[]>([]);
+  const [jsonData, setJsonData] = useState<JsonImportData | null>(null);
+  const [mode, setMode] = useState<ImportMode>(null);
   const [fileName, setFileName] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -78,39 +108,66 @@ export function CsvUploadDialog({ open, onOpenChange, onImport }: CsvUploadDialo
     setFileName(file.name);
     const reader = new FileReader();
     reader.onload = () => {
-      const parsed = parseCsv(reader.result as string);
+      const text = reader.result as string;
+
+      // Try JSON first
+      if (file.name.endsWith(".json") || text.trimStart().startsWith("{")) {
+        const parsed = parseJsonImport(text);
+        if (parsed) {
+          setMode("json");
+          setJsonData(parsed);
+          setCsvRows([]);
+          return;
+        }
+      }
+
+      // Fall back to CSV
+      const parsed = parseCsv(text);
       if (parsed.length === 0) {
-        toast.error("No valid rows found. Expected: category, item, cost, vendor");
+        toast.error("No valid data found. Supported formats: JSON export or CSV (category, item, cost, vendor)");
         return;
       }
-      setRows(parsed);
+      setMode("csv");
+      setCsvRows(parsed);
+      setJsonData(null);
     };
     reader.readAsText(file);
   };
 
   const handleImport = () => {
-    onImport(rows);
-    toast.success(`Imported ${rows.length} items`);
-    setRows([]);
+    if (mode === "json" && jsonData) {
+      onFullImport(jsonData.categories);
+      const s = jsonData.summary;
+      toast.success(`Imported ${s.categories} categories, ${s.items} items, ${s.payments} payments, ${s.attachments} attachments`);
+    } else if (mode === "csv" && csvRows.length > 0) {
+      onImport(csvRows);
+      toast.success(`Imported ${csvRows.length} items`);
+    }
+    resetAndClose();
+  };
+
+  const resetAndClose = () => {
+    setCsvRows([]);
+    setJsonData(null);
+    setMode(null);
     setFileName("");
     onOpenChange(false);
   };
 
   const handleClose = (val: boolean) => {
-    if (!val) {
-      setRows([]);
-      setFileName("");
-    }
-    onOpenChange(val);
+    if (!val) resetAndClose();
+    else onOpenChange(val);
   };
+
+  const hasData = mode === "json" ? !!jsonData : csvRows.length > 0;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Import CSV</DialogTitle>
+          <DialogTitle>Import Data</DialogTitle>
           <DialogDescription>
-            Upload a CSV with columns: <strong>category, item, cost, vendor</strong>
+            Upload a <strong>JSON export</strong> (full data with payments & attachments) or a <strong>CSV</strong> (category, item, cost, vendor).
           </DialogDescription>
         </DialogHeader>
 
@@ -121,18 +178,33 @@ export function CsvUploadDialog({ open, onOpenChange, onImport }: CsvUploadDialo
           >
             <Upload className="h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
-              {fileName || "Click to select a CSV file"}
+              {fileName || "Click to select a JSON or CSV file"}
             </p>
           </div>
           <input
             ref={fileRef}
             type="file"
-            accept=".csv,text/csv"
+            accept=".json,.csv,application/json,text/csv"
             className="hidden"
             onChange={handleFile}
           />
 
-          {rows.length > 0 && (
+          {/* JSON preview */}
+          {mode === "json" && jsonData && (
+            <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
+              <p className="text-sm font-medium text-foreground">JSON Export Detected</p>
+              <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                <span>Categories: <strong className="text-foreground">{jsonData.summary.categories}</strong></span>
+                <span>Items: <strong className="text-foreground">{jsonData.summary.items}</strong></span>
+                <span>Payments: <strong className="text-foreground">{jsonData.summary.payments}</strong></span>
+                <span>Attachments: <strong className="text-foreground">{jsonData.summary.attachments}</strong></span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">All data including payments, links, and attachments will be imported.</p>
+            </div>
+          )}
+
+          {/* CSV preview */}
+          {mode === "csv" && csvRows.length > 0 && (
             <div className="max-h-48 overflow-auto rounded-lg border border-border text-sm">
               <table className="w-full">
                 <thead className="bg-muted sticky top-0">
@@ -144,7 +216,7 @@ export function CsvUploadDialog({ open, onOpenChange, onImport }: CsvUploadDialo
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r, i) => (
+                  {csvRows.map((r, i) => (
                     <tr key={i} className="border-t border-border">
                       <td className="px-3 py-1.5">{r.category}</td>
                       <td className="px-3 py-1.5">{r.item}</td>
@@ -160,8 +232,10 @@ export function CsvUploadDialog({ open, onOpenChange, onImport }: CsvUploadDialo
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button disabled={rows.length === 0} onClick={handleImport}>
-            Import {rows.length} items
+          <Button disabled={!hasData} onClick={handleImport}>
+            {mode === "json"
+              ? `Import full project data`
+              : `Import ${csvRows.length} items`}
           </Button>
         </DialogFooter>
       </DialogContent>

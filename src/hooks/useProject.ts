@@ -282,12 +282,43 @@ export function useProject() {
     });
   };
 
+  const fullImport = (categories: Category[]) => {
+    updateProject((p) => {
+      const updated = { ...p, categories: [...p.categories] };
+      for (const importCat of categories) {
+        let existing = updated.categories.find(
+          (c) => c.name.toLowerCase() === importCat.name.toLowerCase()
+        );
+        if (!existing) {
+          const usedColors = updated.categories.map((c) => c.color);
+          existing = {
+            id: generateId(),
+            name: importCat.name,
+            color: importCat.color || getNextColor(usedColors),
+            items: [],
+          };
+          updated.categories.push(existing);
+        }
+        for (const item of importCat.items) {
+          existing.items.push({
+            ...item,
+            id: generateId(),
+            payments: (item.payments || []).map((p) => ({ ...p, id: generateId() })),
+            attachments: (item.attachments || []).map((a) => ({ ...a, id: generateId() })),
+          });
+        }
+      }
+      return updated;
+    });
+  };
+
   return {
     project,
     loading,
     setProjectName,
     addCategory,
     bulkImport,
+    fullImport,
     updateCategory,
     updateCategoryColor,
     deleteCategory,
