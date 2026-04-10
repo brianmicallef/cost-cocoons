@@ -6,7 +6,7 @@ import { CsvUploadDialog } from "./CsvUploadDialog";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HardHat, Plus, AlertTriangle, Upload, Download, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
+import { House, Plus, AlertTriangle, Upload, Download, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
