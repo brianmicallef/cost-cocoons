@@ -19,6 +19,7 @@ export interface LineItem {
   predictedCost: number;
   payments: Payment[];
   attachments: Attachment[];
+  completed?: boolean;
 }
 
 export interface Category {
