@@ -135,6 +135,9 @@ export function CategoryCard({
             className="text-lg font-semibold text-foreground flex-1 group flex items-center gap-2 cursor-pointer"
             onDoubleClick={(e) => { e.stopPropagation(); setEditingName(true); }}
           >
+            {category.name}
+            <button
+              onClick={(e) => { e.stopPropagation(); setEditingName(true); }}
               className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
             >
               <Pencil className="h-3.5 w-3.5" />

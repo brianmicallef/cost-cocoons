@@ -132,7 +132,7 @@ export function LineItemRow({
             <>
               <div
                 className="flex-1 group flex items-center gap-2 cursor-pointer"
-                onDoubleClick={() => setEditing(true)}
+                onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}
               >
                 <span className={`font-medium text-foreground ${item.status === 'done' ? "line-through" : ""}`}>{item.name}</span>
                 {item.vendor && (
