@@ -78,7 +78,7 @@ export function ContingencySection({ categories, contingencyRates, onUpdateRate 
                   value={r.rate || ""}
                   onChange={(e) => onUpdateRate(r.id, parseFloat(e.target.value) || 0)}
                   placeholder="0"
-                  className="h-7 w-16 text-sm text-right"
+                  className="h-7 w-16 text-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
               <span className="text-sm text-right font-medium text-foreground">{fmt(r.contingency)}</span>
