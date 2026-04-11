@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, ChevronRight, ShieldAlert } from "lucide-react";
 
@@ -14,13 +14,21 @@ interface ContingencySectionProps {
   categories: CategoryContingencyData[];
   contingencyRates: Record<string, number>;
   onUpdateRate: (categoryId: string, rate: number) => void;
+  forceExpanded?: boolean;
+  collapseSignal?: number;
 }
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
 
-export function ContingencySection({ categories, contingencyRates, onUpdateRate }: ContingencySectionProps) {
+export function ContingencySection({ categories, contingencyRates, onUpdateRate, forceExpanded, collapseSignal }: ContingencySectionProps) {
   const [expanded, setExpanded] = useState(true);
+
+  useEffect(() => {
+    if (collapseSignal !== undefined && forceExpanded !== undefined) {
+      setExpanded(forceExpanded);
+    }
+  }, [collapseSignal]);
 
   const rows = categories.map((c) => {
     const rate = contingencyRates[c.id] || 0;
@@ -35,10 +43,13 @@ export function ContingencySection({ categories, contingencyRates, onUpdateRate 
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
       <div className="h-1.5 bg-muted-foreground/30" />
 
-      <div className="flex items-center gap-3 px-5 py-4">
-        <button onClick={() => setExpanded(!expanded)} className="text-foreground">
+      <div
+        className="flex items-center gap-3 px-5 py-4 cursor-pointer select-none"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <span className="text-foreground">
           {expanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-        </button>
+        </span>
         <ShieldAlert className="h-5 w-5 text-muted-foreground" />
         <h2 className="text-lg font-semibold text-foreground flex-1">Contingency</h2>
         <div className="text-right">
