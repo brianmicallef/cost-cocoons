@@ -298,7 +298,28 @@ export function ProjectTracker() {
 
         {/* Categories header with collapse toggle */}
         {project.categories.length > 0 && (
-          <div className="flex justify-end">
+          <div className="flex flex-wrap items-center gap-2 justify-end">
+            {(['idea', 'quote', 'started', 'done'] as ItemStatus[]).map((status) => {
+              const active = visibleStatuses.has(status);
+              return (
+                <Button
+                  key={status}
+                  variant={active ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setVisibleStatuses((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(status)) next.delete(status);
+                      else next.add(status);
+                      return next;
+                    });
+                  }}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </Button>
+              );
+            })}
+            <div className="w-px h-6 bg-border mx-1" />
             <Button
               variant="outline"
               size="sm"
@@ -322,6 +343,7 @@ export function ProjectTracker() {
             category={cat}
             forceExpanded={allExpanded}
             collapseSignal={collapseSignal}
+            visibleStatuses={visibleStatuses}
             onAddLineItem={addLineItem}
             onDeleteCategory={deleteCategory}
             onUpdateCategory={updateCategory}
