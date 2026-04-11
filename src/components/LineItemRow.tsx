@@ -178,7 +178,7 @@ export function LineItemRow({
               <Button size="sm" variant="outline" onClick={() => setAttachmentOpen(true)} title="Add link/attachment">
                 <Link className="h-3.5 w-3.5" />
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => onCycleStatus(categoryId, item.id)} title={`${statusConfig[item.status || 'idea'].label} — click for ${statusConfig[item.status || 'idea'].nextLabel}`} className={`${statusConfig[item.status || 'idea'].color} gap-1 text-xs px-2`}>
+              <Button size="sm" variant="ghost" onClick={() => onCycleStatus(categoryId, item.id)} title={`${statusConfig[item.status || 'idea'].label} — click for ${statusConfig[item.status || 'idea'].nextLabel}`} className={`${statusConfig[item.status || 'idea'].color} gap-1 text-xs px-2 w-[80px] justify-start`}>
                 {(() => { const Icon = statusConfig[item.status || 'idea'].icon; return <Icon className="h-3.5 w-3.5" />; })()}
                 {statusConfig[item.status || 'idea'].label}
               </Button>
