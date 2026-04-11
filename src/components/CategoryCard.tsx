@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { Category } from "@/types/project";
+import type { Category, ItemStatus } from "@/types/project";
 import { LineItemRow } from "./LineItemRow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ interface CategoryCardProps {
   category: Category;
   forceExpanded?: boolean;
   collapseSignal?: number;
+  visibleStatuses?: Set<ItemStatus>;
   onAddLineItem: (categoryId: string, name: string, predictedCost: number, vendor: string) => void;
   onUpdateCategory: (categoryId: string, name: string) => void;
   onUpdateCategoryColor: (categoryId: string, color: string) => void;
@@ -30,6 +31,7 @@ export function CategoryCard({
   category,
   forceExpanded,
   collapseSignal,
+  visibleStatuses,
   onAddLineItem,
   onUpdateCategory,
   onUpdateCategoryColor,
@@ -189,7 +191,9 @@ export function CategoryCard({
 
       {expanded && (
         <div className="px-5 py-4 space-y-3">
-          {category.items.map((item) => (
+          {category.items
+            .filter((item) => !visibleStatuses || visibleStatuses.has(item.status))
+            .map((item) => (
             <LineItemRow
               key={item.id}
               item={item}

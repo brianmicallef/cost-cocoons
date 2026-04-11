@@ -7,6 +7,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { House, Plus, AlertTriangle, Upload, Download, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
+import type { ItemStatus } from "@/types/project";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
@@ -36,6 +37,9 @@ export function ProjectTracker() {
   const [csvDialogOpen, setCsvDialogOpen] = useState(false);
   const [allExpanded, setAllExpanded] = useState(true);
   const [collapseSignal, setCollapseSignal] = useState(0);
+  const [visibleStatuses, setVisibleStatuses] = useState<Set<ItemStatus>>(
+    new Set(['idea', 'quote', 'started'] as ItemStatus[])
+  );
   const [contingencyRates, setContingencyRates] = useState<Record<string, number>>({});
   const contingencyLoadedRef = useRef(false);
   const contingencySaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -294,7 +298,28 @@ export function ProjectTracker() {
 
         {/* Categories header with collapse toggle */}
         {project.categories.length > 0 && (
-          <div className="flex justify-end">
+          <div className="flex flex-wrap items-center gap-2 justify-end">
+            {(['idea', 'quote', 'started', 'done'] as ItemStatus[]).map((status) => {
+              const active = visibleStatuses.has(status);
+              return (
+                <Button
+                  key={status}
+                  variant={active ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setVisibleStatuses((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(status)) next.delete(status);
+                      else next.add(status);
+                      return next;
+                    });
+                  }}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </Button>
+              );
+            })}
+            <div className="w-px h-6 bg-border mx-1" />
             <Button
               variant="outline"
               size="sm"
@@ -318,6 +343,7 @@ export function ProjectTracker() {
             category={cat}
             forceExpanded={allExpanded}
             collapseSignal={collapseSignal}
+            visibleStatuses={visibleStatuses}
             onAddLineItem={addLineItem}
             onDeleteCategory={deleteCategory}
             onUpdateCategory={updateCategory}
