@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import type { Project, Category, LineItem, Payment, Attachment } from "@/types/project";
+import type { Project, Category, LineItem, Payment, Attachment, ItemStatus } from "@/types/project";
 import { getNextColor } from "@/lib/categoryColors";
 
 const generateId = () => crypto.randomUUID();
@@ -13,7 +13,7 @@ const migrateProject = (p: Project): Project => ({
       ...item,
       attachments: item.attachments || [],
       vendor: item.vendor || "",
-      completed: item.completed || false,
+      status: item.status || (item.completed ? 'done' : 'idea'),
     })),
   })),
 });
@@ -116,7 +116,7 @@ export function useProject() {
               ...c,
               items: [
                 ...c.items,
-                { id: generateId(), name, predictedCost, vendor, payments: [], attachments: [] },
+                { id: generateId(), name, predictedCost, vendor, payments: [], attachments: [], status: 'idea' as ItemStatus },
               ],
             }
           : c
@@ -142,16 +142,21 @@ export function useProject() {
       ),
     }));
 
-  const toggleLineItemComplete = (categoryId: string, itemId: string) =>
+  const statusOrder: ItemStatus[] = ['idea', 'quote', 'started', 'done'];
+
+  const cycleLineItemStatus = (categoryId: string, itemId: string) =>
     updateProject((p) => ({
       ...p,
       categories: p.categories.map((c) =>
         c.id === categoryId
           ? {
               ...c,
-              items: c.items.map((i) =>
-                i.id === itemId ? { ...i, completed: !i.completed } : i
-              ),
+              items: c.items.map((i) => {
+                if (i.id !== itemId) return i;
+                const currentIndex = statusOrder.indexOf(i.status || 'idea');
+                const nextStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
+                return { ...i, status: nextStatus };
+              }),
             }
           : c
       ),
@@ -292,6 +297,7 @@ export function useProject() {
           vendor: row.vendor,
           payments: [],
           attachments: [],
+          status: 'idea',
         });
       }
       return updated;
@@ -340,7 +346,7 @@ export function useProject() {
     deleteCategory,
     addLineItem,
     updateLineItem,
-    toggleLineItemComplete,
+    cycleLineItemStatus,
     deleteLineItem,
     addPayment,
     deletePayment,

@@ -18,7 +18,7 @@ interface CategoryCardProps {
   onAddPayment: (categoryId: string, itemId: string, amount: number, description: string, date: string) => void;
   onDeletePayment: (categoryId: string, itemId: string, paymentId: string) => void;
   onDeleteItem: (categoryId: string, itemId: string) => void;
-  onToggleComplete: (categoryId: string, itemId: string) => void;
+  onCycleStatus: (categoryId: string, itemId: string) => void;
   onAddAttachment: (categoryId: string, itemId: string, name: string, url: string, type: 'link' | 'file') => void;
   onDeleteAttachment: (categoryId: string, itemId: string, attachmentId: string) => void;
 }
@@ -38,7 +38,7 @@ export function CategoryCard({
   onAddPayment,
   onDeletePayment,
   onDeleteItem,
-  onToggleComplete,
+  onCycleStatus,
   onAddAttachment,
   onDeleteAttachment,
 }: CategoryCardProps) {
@@ -198,7 +198,7 @@ export function CategoryCard({
               onAddPayment={onAddPayment}
               onDeletePayment={onDeletePayment}
               onDeleteItem={onDeleteItem}
-              onToggleComplete={onToggleComplete}
+              onCycleStatus={onCycleStatus}
               onUpdateItem={onUpdateLineItem}
               onAddAttachment={onAddAttachment}
               onDeleteAttachment={onDeleteAttachment}
