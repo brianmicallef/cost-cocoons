@@ -23,7 +23,7 @@ export function ProjectTracker() {
     deleteCategory,
     addLineItem,
     deleteLineItem,
-    toggleLineItemComplete,
+    cycleLineItemStatus,
     updateLineItem,
     addPayment,
     deletePayment,
@@ -326,7 +326,7 @@ export function ProjectTracker() {
             onAddPayment={addPayment}
             onDeletePayment={deletePayment}
             onDeleteItem={deleteLineItem}
-            onToggleComplete={toggleLineItemComplete}
+            onCycleStatus={cycleLineItemStatus}
             onAddAttachment={addAttachment}
             onDeleteAttachment={deleteAttachment}
           />

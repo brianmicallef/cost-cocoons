@@ -1,10 +1,10 @@
 import { useState } from "react";
-import type { LineItem } from "@/types/project";
+import type { LineItem, ItemStatus } from "@/types/project";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PaymentDialog } from "./PaymentDialog";
 import { AttachmentDialog } from "./AttachmentDialog";
-import { ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X, Link, Paperclip, ExternalLink, CircleCheck, Circle } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X, Link, Paperclip, ExternalLink, Lightbulb, FileText, Play, CircleCheck } from "lucide-react";
 
 interface LineItemRowProps {
   item: LineItem;
@@ -13,7 +13,7 @@ interface LineItemRowProps {
   onAddPayment: (categoryId: string, itemId: string, amount: number, description: string, date: string) => void;
   onDeletePayment: (categoryId: string, itemId: string, paymentId: string) => void;
   onDeleteItem: (categoryId: string, itemId: string) => void;
-  onToggleComplete: (categoryId: string, itemId: string) => void;
+  onCycleStatus: (categoryId: string, itemId: string) => void;
   onUpdateItem: (categoryId: string, itemId: string, updates: { name?: string; predictedCost?: number; vendor?: string }) => void;
   onAddAttachment: (categoryId: string, itemId: string, name: string, url: string, type: 'link' | 'file') => void;
   onDeleteAttachment: (categoryId: string, itemId: string, attachmentId: string) => void;
@@ -22,6 +22,13 @@ interface LineItemRowProps {
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
 
+const statusConfig: Record<ItemStatus, { label: string; icon: typeof Lightbulb; color: string; nextLabel: string }> = {
+  idea: { label: "Idea", icon: Lightbulb, color: "text-muted-foreground", nextLabel: "Quote" },
+  quote: { label: "Quote", icon: FileText, color: "text-blue-500", nextLabel: "Started" },
+  started: { label: "Started", icon: Play, color: "text-amber-500", nextLabel: "Done" },
+  done: { label: "Done", icon: CircleCheck, color: "text-success", nextLabel: "Idea" },
+};
+
 export function LineItemRow({
   item,
   categoryId,
@@ -29,7 +36,7 @@ export function LineItemRow({
   onAddPayment,
   onDeletePayment,
   onDeleteItem,
-  onToggleComplete,
+  onCycleStatus,
   onUpdateItem,
   onAddAttachment,
   onDeleteAttachment,
@@ -67,7 +74,7 @@ export function LineItemRow({
 
   return (
     <>
-      <div className={`border border-border rounded-lg bg-card overflow-hidden ${item.completed ? "opacity-60" : ""}`}>
+      <div className={`border border-border rounded-lg bg-card overflow-hidden ${item.status === 'done' ? "opacity-60" : ""}`}>
         <div className="flex items-center gap-3 px-4 py-3">
           <button
             onClick={() => setExpanded(!expanded)}
@@ -127,7 +134,7 @@ export function LineItemRow({
                 className="flex-1 group flex items-center gap-2 cursor-pointer"
                 onDoubleClick={() => setEditing(true)}
               >
-                <span className={`font-medium text-foreground ${item.completed ? "line-through" : ""}`}>{item.name}</span>
+                <span className={`font-medium text-foreground ${item.status === 'done' ? "line-through" : ""}`}>{item.name}</span>
                 {item.vendor && (
                   <span className="text-muted-foreground text-xs">· {item.vendor}</span>
                 )}
@@ -171,8 +178,9 @@ export function LineItemRow({
               <Button size="sm" variant="outline" onClick={() => setAttachmentOpen(true)} title="Add link/attachment">
                 <Link className="h-3.5 w-3.5" />
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => onToggleComplete(categoryId, item.id)} title={item.completed ? "Mark as pending" : "Mark as complete"} className={item.completed ? "text-success hover:text-muted-foreground" : "text-muted-foreground hover:text-success"}>
-                {item.completed ? <CircleCheck className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+              <Button size="sm" variant="ghost" onClick={() => onCycleStatus(categoryId, item.id)} title={`${statusConfig[item.status || 'idea'].label} — click for ${statusConfig[item.status || 'idea'].nextLabel}`} className={`${statusConfig[item.status || 'idea'].color} gap-1 text-xs px-2`}>
+                {(() => { const Icon = statusConfig[item.status || 'idea'].icon; return <Icon className="h-3.5 w-3.5" />; })()}
+                {statusConfig[item.status || 'idea'].label}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => onDeleteItem(categoryId, item.id)} className="text-muted-foreground hover:text-destructive">
                 <Trash2 className="h-3.5 w-3.5" />

@@ -12,6 +12,8 @@ export interface Payment {
   date: string;
 }
 
+export type ItemStatus = 'idea' | 'quote' | 'started' | 'done';
+
 export interface LineItem {
   id: string;
   name: string;
@@ -19,6 +21,7 @@ export interface LineItem {
   predictedCost: number;
   payments: Payment[];
   attachments: Attachment[];
+  status: ItemStatus;
   completed?: boolean;
 }
 
