@@ -7,6 +7,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { House, Plus, AlertTriangle, Upload, Download, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
+import type { ItemStatus } from "@/types/project";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
