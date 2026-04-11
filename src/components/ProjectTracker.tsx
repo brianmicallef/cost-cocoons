@@ -391,6 +391,8 @@ export function ProjectTracker() {
             categories={categoryData}
             contingencyRates={contingencyRates}
             onUpdateRate={handleUpdateContingencyRate}
+            forceExpanded={allExpanded}
+            collapseSignal={collapseSignal}
           />
         )}
         <CsvUploadDialog
