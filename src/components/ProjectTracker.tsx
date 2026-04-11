@@ -37,6 +37,9 @@ export function ProjectTracker() {
   const [csvDialogOpen, setCsvDialogOpen] = useState(false);
   const [allExpanded, setAllExpanded] = useState(true);
   const [collapseSignal, setCollapseSignal] = useState(0);
+  const [visibleStatuses, setVisibleStatuses] = useState<Set<ItemStatus>>(
+    new Set(['idea', 'quote', 'started'] as ItemStatus[])
+  );
   const [contingencyRates, setContingencyRates] = useState<Record<string, number>>({});
   const contingencyLoadedRef = useRef(false);
   const contingencySaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
