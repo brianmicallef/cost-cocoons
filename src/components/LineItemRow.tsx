@@ -75,16 +75,16 @@ export function LineItemRow({
   return (
     <>
       <div className={`border border-border rounded-lg bg-card overflow-hidden ${item.status === 'done' ? "opacity-60" : ""}`}>
-        <div className="flex items-center gap-3 px-4 py-3">
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
+        <div
+          className="flex items-center gap-3 px-4 py-3 cursor-pointer select-none"
+          onClick={() => setExpanded(!expanded)}
+        >
+          <span className="text-muted-foreground">
             {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          </button>
+          </span>
 
           {editing ? (
-            <div className="flex items-center gap-2 flex-1">
+            <div className="flex items-center gap-2 flex-1" onClick={(e) => e.stopPropagation()}>
               <Input
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
@@ -132,7 +132,7 @@ export function LineItemRow({
             <>
               <div
                 className="flex-1 group flex items-center gap-2 cursor-pointer"
-                onDoubleClick={() => setEditing(true)}
+                onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}
               >
                 <span className={`font-medium text-foreground ${item.status === 'done' ? "line-through" : ""}`}>{item.name}</span>
                 {item.vendor && (
@@ -171,7 +171,7 @@ export function LineItemRow({
           )}
 
           {!editing && (
-            <div className="flex items-center gap-1 ml-2">
+            <div className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
               <Button size="sm" variant="outline" onClick={() => setPaymentOpen(true)} title="Add payment" className="h-7 w-7 p-0 text-xs font-semibold">
                 +£
               </Button>

@@ -95,24 +95,24 @@ export function CategoryCard({
       <div className="h-1.5" style={{ backgroundColor: category.color }} />
 
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-4">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="text-foreground"
-        >
+      <div
+        className="flex items-center gap-3 px-5 py-4 cursor-pointer select-none"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <span className="text-foreground">
           {expanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-        </button>
+        </span>
 
         {/* Color dot + picker */}
         <button
-          onClick={() => setColorPickerOpen(true)}
+          onClick={(e) => { e.stopPropagation(); setColorPickerOpen(true); }}
           className="h-4 w-4 rounded-full border border-border/50 shrink-0 hover:scale-125 transition-transform"
           style={{ backgroundColor: category.color }}
           title="Change colour"
         />
 
         {editingName ? (
-          <div className="flex items-center gap-2 flex-1">
+          <div className="flex items-center gap-2 flex-1" onClick={(e) => e.stopPropagation()}>
             <Input
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
@@ -133,11 +133,11 @@ export function CategoryCard({
         ) : (
           <h2
             className="text-lg font-semibold text-foreground flex-1 group flex items-center gap-2 cursor-pointer"
-            onDoubleClick={() => setEditingName(true)}
+            onDoubleClick={(e) => { e.stopPropagation(); setEditingName(true); }}
           >
             {category.name}
             <button
-              onClick={() => setEditingName(true)}
+              onClick={(e) => { e.stopPropagation(); setEditingName(true); }}
               className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
             >
               <Pencil className="h-3.5 w-3.5" />
@@ -164,7 +164,7 @@ export function CategoryCard({
         <Button
           size="sm"
           variant="ghost"
-          onClick={() => onDeleteCategory(category.id)}
+          onClick={(e) => { e.stopPropagation(); onDeleteCategory(category.id); }}
           className="text-muted-foreground hover:text-destructive"
         >
           <Trash2 className="h-4 w-4" />
