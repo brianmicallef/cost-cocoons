@@ -107,6 +107,14 @@ export function useProject() {
       categories: p.categories.filter((c) => c.id !== categoryId),
     }));
 
+  const reorderCategories = (fromIndex: number, toIndex: number) =>
+    updateProject((p) => {
+      const cats = [...p.categories];
+      const [moved] = cats.splice(fromIndex, 1);
+      cats.splice(toIndex, 0, moved);
+      return { ...p, categories: cats };
+    });
+
   const addLineItem = (categoryId: string, name: string, predictedCost: number, vendor: string = "") =>
     updateProject((p) => ({
       ...p,
@@ -344,6 +352,7 @@ export function useProject() {
     updateCategory,
     updateCategoryColor,
     deleteCategory,
+    reorderCategories,
     addLineItem,
     updateLineItem,
     cycleLineItemStatus,
