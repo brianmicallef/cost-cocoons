@@ -129,12 +129,40 @@ export function ProjectTracker() {
   const totalWithContingency = totalBudget + totalContingency;
   const totalRemaining = totalWithContingency - totalSpent;
 
-  const overBudgetCount = project.categories.reduce((count, c) => {
-    return count + c.items.filter((i) => {
-      const itemSpent = i.payments.reduce((s, p) => s + p.amount, 0);
-      return itemSpent > i.predictedCost;
-    }).length;
+  // Flatten all items for summary calculations
+  const allItems = project.categories.flatMap((c) => c.items);
+
+  const spendToDate = allItems.reduce(
+    (s, i) => s + i.payments.reduce((ps, p) => ps + p.amount, 0), 0
+  );
+  const quotedSpend = allItems
+    .filter((i) => i.status === 'quote' || i.status === 'started')
+    .reduce((s, i) => s + i.predictedCost, 0);
+  const unquotedSpend = allItems
+    .filter((i) => i.status === 'idea' || i.status === 'done')
+    .reduce((s, i) => s + i.predictedCost, 0);
+  const totalSpend = quotedSpend + unquotedSpend + totalContingency;
+  const overspend = allItems.reduce((s, i) => {
+    const itemSpent = i.payments.reduce((ps, p) => ps + p.amount, 0);
+    const remaining = i.predictedCost - itemSpent;
+    return s + (remaining < 0 ? Math.abs(remaining) : 0);
   }, 0);
+
+  // Item counts
+  const spendToDateCount = allItems.filter(
+    (i) => i.payments.length > 0
+  ).length;
+  const quotedCount = allItems.filter(
+    (i) => i.status === 'quote' || i.status === 'started'
+  ).length;
+  const unquotedCount = allItems.filter(
+    (i) => i.status === 'idea' || i.status === 'done'
+  ).length;
+  const totalItemCount = allItems.length;
+  const overspendCount = allItems.filter((i) => {
+    const itemSpent = i.payments.reduce((ps, p) => ps + p.amount, 0);
+    return itemSpent > i.predictedCost;
+  }).length;
 
   // JSON Export (full fidelity)
   const handleExport = () => {
