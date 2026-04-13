@@ -129,12 +129,40 @@ export function ProjectTracker() {
   const totalWithContingency = totalBudget + totalContingency;
   const totalRemaining = totalWithContingency - totalSpent;
 
-  const overBudgetCount = project.categories.reduce((count, c) => {
-    return count + c.items.filter((i) => {
-      const itemSpent = i.payments.reduce((s, p) => s + p.amount, 0);
-      return itemSpent > i.predictedCost;
-    }).length;
+  // Flatten all items for summary calculations
+  const allItems = project.categories.flatMap((c) => c.items);
+
+  const spendToDate = allItems.reduce(
+    (s, i) => s + i.payments.reduce((ps, p) => ps + p.amount, 0), 0
+  );
+  const quotedSpend = allItems
+    .filter((i) => i.status === 'quote' || i.status === 'started')
+    .reduce((s, i) => s + i.predictedCost, 0);
+  const unquotedSpend = allItems
+    .filter((i) => i.status === 'idea' || i.status === 'done')
+    .reduce((s, i) => s + i.predictedCost, 0);
+  const totalSpend = quotedSpend + unquotedSpend + totalContingency;
+  const overspend = allItems.reduce((s, i) => {
+    const itemSpent = i.payments.reduce((ps, p) => ps + p.amount, 0);
+    const remaining = i.predictedCost - itemSpent;
+    return s + (remaining < 0 ? Math.abs(remaining) : 0);
   }, 0);
+
+  // Item counts
+  const spendToDateCount = allItems.filter(
+    (i) => i.payments.length > 0
+  ).length;
+  const quotedCount = allItems.filter(
+    (i) => i.status === 'quote' || i.status === 'started'
+  ).length;
+  const unquotedCount = allItems.filter(
+    (i) => i.status === 'idea' || i.status === 'done'
+  ).length;
+  const totalItemCount = allItems.length;
+  const overspendCount = allItems.filter((i) => {
+    const itemSpent = i.payments.reduce((ps, p) => ps + p.amount, 0);
+    return itemSpent > i.predictedCost;
+  }).length;
 
   // JSON Export (full fidelity)
   const handleExport = () => {
@@ -198,36 +226,62 @@ export function ProjectTracker() {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Summary cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Budget</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalBudget)}</p>
+            <p className="text-sm text-muted-foreground">Spend to Date</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{fmt(spendToDate)}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-5">
+            <p className="text-sm text-muted-foreground">Quoted Spend</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{fmt(quotedSpend)}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-5">
+            <p className="text-sm text-muted-foreground">Unquoted Spend</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{fmt(unquotedSpend)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
             <p className="text-sm text-muted-foreground">Contingency</p>
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalContingency)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Total Budget</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalWithContingency)}</p>
+            <p className="text-sm text-muted-foreground">Total Spend</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalSpend)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Remaining</p>
-            <p className={`text-2xl font-bold mt-1 ${totalRemaining < 0 ? "text-destructive" : "text-success"}`}>
-              {fmt(totalRemaining)}
+            <p className="text-sm text-muted-foreground">Overspend</p>
+            <p className={`text-2xl font-bold mt-1 ${overspend > 0 ? "text-destructive" : "text-success"}`}>
+              {fmt(overspend)}
             </p>
           </div>
-          <div className="rounded-xl border border-border bg-card p-5 col-span-2 sm:col-span-1">
-            <p className="text-sm text-muted-foreground">Over Budget</p>
-            <div className="flex items-center gap-2 mt-1">
-              <p className={`text-2xl font-bold ${overBudgetCount > 0 ? "text-destructive" : "text-success"}`}>
-                {overBudgetCount}
-              </p>
-              {overBudgetCount > 0 && <AlertTriangle className="h-5 w-5 text-destructive" />}
-              <span className="text-sm text-muted-foreground">
-                {overBudgetCount === 1 ? "item" : "items"}
-              </span>
-            </div>
+        </div>
+
+        {/* Item count row */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-xs text-muted-foreground">Items with Payments</p>
+            <p className="text-lg font-bold text-foreground mt-0.5">{spendToDateCount}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-xs text-muted-foreground">Quoted Items</p>
+            <p className="text-lg font-bold text-foreground mt-0.5">{quotedCount}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-xs text-muted-foreground">Unquoted Items</p>
+            <p className="text-lg font-bold text-foreground mt-0.5">{unquotedCount}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-xs text-muted-foreground">Categories</p>
+            <p className="text-lg font-bold text-foreground mt-0.5">{project.categories.length}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-xs text-muted-foreground">Total Items</p>
+            <p className="text-lg font-bold text-foreground mt-0.5">{totalItemCount}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-xs text-muted-foreground">Over Budget</p>
+            <p className={`text-lg font-bold mt-0.5 ${overspendCount > 0 ? "text-destructive" : "text-success"}`}>
+              {overspendCount}
+            </p>
           </div>
         </div>
 
