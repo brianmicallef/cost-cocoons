@@ -4,7 +4,7 @@ import { LineItemRow } from "./LineItemRow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ColorPickerDialog } from "./ColorPickerDialog";
-import { ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X, Palette } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X, Palette, ArrowUp, ArrowDown } from "lucide-react";
 
 interface CategoryCardProps {
   category: Category;
@@ -22,6 +22,8 @@ interface CategoryCardProps {
   onCycleStatus: (categoryId: string, itemId: string) => void;
   onAddAttachment: (categoryId: string, itemId: string, name: string, url: string, type: 'link' | 'file') => void;
   onDeleteAttachment: (categoryId: string, itemId: string, attachmentId: string) => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
 const fmt = (n: number) =>
@@ -43,6 +45,8 @@ export function CategoryCard({
   onCycleStatus,
   onAddAttachment,
   onDeleteAttachment,
+  onMoveUp,
+  onMoveDown,
 }: CategoryCardProps) {
   const [expanded, setExpanded] = useState(true);
 
@@ -161,14 +165,26 @@ export function CategoryCard({
             </span>
           </div>
         </div>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={(e) => { e.stopPropagation(); onDeleteCategory(category.id); }}
-          className="text-muted-foreground hover:text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+          {onMoveUp && (
+            <Button size="sm" variant="ghost" onClick={onMoveUp} className="text-muted-foreground hover:text-foreground h-7 w-7 p-0">
+              <ArrowUp className="h-4 w-4" />
+            </Button>
+          )}
+          {onMoveDown && (
+            <Button size="sm" variant="ghost" onClick={onMoveDown} className="text-muted-foreground hover:text-foreground h-7 w-7 p-0">
+              <ArrowDown className="h-4 w-4" />
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onDeleteCategory(category.id)}
+            className="text-muted-foreground hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Mobile totals */}
