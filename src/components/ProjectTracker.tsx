@@ -150,15 +150,10 @@ export function ProjectTracker() {
   }, 0);
 
   // Item counts
-  const spendToDateCount = allItems.filter(
-    (i) => i.payments.length > 0
-  ).length;
-  const quotedCount = allItems.filter(
-    (i) => i.status === 'quote' || i.status === 'started'
-  ).length;
-  const unquotedCount = allItems.filter(
-    (i) => i.status === 'idea' || i.status === 'done'
-  ).length;
+  const completedCount = allItems.filter((i) => i.status === 'done').length;
+  const startedCount = allItems.filter((i) => i.status === 'started').length;
+  const quotedCount = allItems.filter((i) => i.status === 'quote').length;
+  const unquotedCount = allItems.filter((i) => i.status === 'idea').length;
   const totalItemCount = allItems.length;
   const overspendCount = allItems.filter((i) => {
     const itemSpent = i.payments.reduce((ps, p) => ps + p.amount, 0);
@@ -259,27 +254,27 @@ export function ProjectTracker() {
         {/* Item count row */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Started Items</p>
-            <p className="text-lg font-bold text-foreground mt-0.5">{spendToDateCount}</p>
+            <p className="text-xs text-muted-foreground">Completed</p>
+            <p className="text-lg font-bold text-foreground mt-0.5">{completedCount}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Quoted Items</p>
+            <p className="text-xs text-muted-foreground">Started</p>
+            <p className="text-lg font-bold text-foreground mt-0.5">{startedCount}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-xs text-muted-foreground">Quoted</p>
             <p className="text-lg font-bold text-foreground mt-0.5">{quotedCount}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Unquoted Items</p>
+            <p className="text-xs text-muted-foreground">Unquoted</p>
             <p className="text-lg font-bold text-foreground mt-0.5">{unquotedCount}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Categories</p>
-            <p className="text-lg font-bold text-foreground mt-0.5">{project.categories.length}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
             <p className="text-xs text-muted-foreground">Total Items</p>
             <p className="text-lg font-bold text-foreground mt-0.5">{totalItemCount}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Over Budget</p>
+            <p className="text-xs text-muted-foreground">Overbudget</p>
             <p className={`text-lg font-bold mt-0.5 ${overspendCount > 0 ? "text-destructive" : "text-success"}`}>
               {overspendCount}
             </p>
