@@ -236,7 +236,7 @@ export function ProjectTracker() {
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(quotedSpend)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Unquoted Spend</p>
+            <p className="text-sm text-muted-foreground">Ideas</p>
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(unquotedSpend)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
@@ -258,7 +258,7 @@ export function ProjectTracker() {
         {/* Item count row */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Items with Payments</p>
+            <p className="text-xs text-muted-foreground">Started Items</p>
             <p className="text-lg font-bold text-foreground mt-0.5">{spendToDateCount}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
