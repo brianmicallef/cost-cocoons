@@ -166,16 +166,12 @@ export function CategoryCard({
           </div>
         </div>
         <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-          {onMoveUp && (
-            <Button size="sm" variant="ghost" onClick={onMoveUp} className="text-muted-foreground hover:text-foreground h-7 w-7 p-0">
-              <ArrowUp className="h-4 w-4" />
-            </Button>
-          )}
-          {onMoveDown && (
-            <Button size="sm" variant="ghost" onClick={onMoveDown} className="text-muted-foreground hover:text-foreground h-7 w-7 p-0">
-              <ArrowDown className="h-4 w-4" />
-            </Button>
-          )}
+          <Button size="sm" variant="ghost" onClick={onMoveUp} disabled={!onMoveUp} className={`h-7 w-7 p-0 ${onMoveUp ? 'text-muted-foreground hover:text-foreground' : 'invisible'}`}>
+            <ArrowUp className="h-4 w-4" />
+          </Button>
+          <Button size="sm" variant="ghost" onClick={onMoveDown} disabled={!onMoveDown} className={`h-7 w-7 p-0 ${onMoveDown ? 'text-muted-foreground hover:text-foreground' : 'invisible'}`}>
+            <ArrowDown className="h-4 w-4" />
+          </Button>
           <Button
             size="sm"
             variant="ghost"
