@@ -22,6 +22,7 @@ export function ProjectTracker() {
     updateCategory,
     updateCategoryColor,
     deleteCategory,
+    reorderCategories,
     addLineItem,
     deleteLineItem,
     cycleLineItemStatus,
@@ -391,7 +392,7 @@ export function ProjectTracker() {
           </div>
         )}
 
-        {project.categories.map((cat) => (
+        {project.categories.map((cat, index) => (
           <CategoryCard
             key={cat.id}
             category={cat}
@@ -409,6 +410,8 @@ export function ProjectTracker() {
             onCycleStatus={cycleLineItemStatus}
             onAddAttachment={addAttachment}
             onDeleteAttachment={deleteAttachment}
+            onMoveUp={index > 0 ? () => reorderCategories(index, index - 1) : undefined}
+            onMoveDown={index < project.categories.length - 1 ? () => reorderCategories(index, index + 1) : undefined}
           />
         ))}
 
