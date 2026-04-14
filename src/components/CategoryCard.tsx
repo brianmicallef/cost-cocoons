@@ -4,7 +4,9 @@ import { LineItemRow } from "./LineItemRow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ColorPickerDialog } from "./ColorPickerDialog";
-import { ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X, Palette, ArrowUp, ArrowDown } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface CategoryCardProps {
   category: Category;
@@ -22,12 +24,24 @@ interface CategoryCardProps {
   onCycleStatus: (categoryId: string, itemId: string) => void;
   onAddAttachment: (categoryId: string, itemId: string, name: string, url: string, type: 'link' | 'file') => void;
   onDeleteAttachment: (categoryId: string, itemId: string, attachmentId: string) => void;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
 }
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
+
+function SortableItemWrapper({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      {children}
+    </div>
+  );
+}
 
 export function CategoryCard({
   category,
@@ -45,8 +59,6 @@ export function CategoryCard({
   onCycleStatus,
   onAddAttachment,
   onDeleteAttachment,
-  onMoveUp,
-  onMoveDown,
 }: CategoryCardProps) {
   const [expanded, setExpanded] = useState(true);
 
@@ -92,6 +104,10 @@ export function CategoryCard({
     setEditName(category.name);
     setEditingName(false);
   };
+
+  const filteredItems = category.items.filter(
+    (item) => !visibleStatuses || visibleStatuses.has(item.status)
+  );
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
@@ -166,12 +182,6 @@ export function CategoryCard({
           </div>
         </div>
         <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-          <Button size="sm" variant="ghost" onClick={onMoveUp} disabled={!onMoveUp} className={`h-7 w-7 p-0 ${onMoveUp ? 'text-muted-foreground hover:text-foreground' : 'invisible'}`}>
-            <ArrowUp className="h-4 w-4" />
-          </Button>
-          <Button size="sm" variant="ghost" onClick={onMoveDown} disabled={!onMoveDown} className={`h-7 w-7 p-0 ${onMoveDown ? 'text-muted-foreground hover:text-foreground' : 'invisible'}`}>
-            <ArrowDown className="h-4 w-4" />
-          </Button>
           <Button
             size="sm"
             variant="ghost"
@@ -203,23 +213,27 @@ export function CategoryCard({
 
       {expanded && (
         <div className="px-5 py-4 space-y-3">
-          {category.items
-            .filter((item) => !visibleStatuses || visibleStatuses.has(item.status))
-            .map((item) => (
-            <LineItemRow
-              key={item.id}
-              item={item}
-              categoryId={category.id}
-              categoryColor={category.color}
-              onAddPayment={onAddPayment}
-              onDeletePayment={onDeletePayment}
-              onDeleteItem={onDeleteItem}
-              onCycleStatus={onCycleStatus}
-              onUpdateItem={onUpdateLineItem}
-              onAddAttachment={onAddAttachment}
-              onDeleteAttachment={onDeleteAttachment}
-            />
-          ))}
+          <SortableContext
+            items={filteredItems.map((item) => `item-${item.id}`)}
+            strategy={verticalListSortingStrategy}
+          >
+            {filteredItems.map((item) => (
+              <SortableItemWrapper key={item.id} id={`item-${item.id}`}>
+                <LineItemRow
+                  item={item}
+                  categoryId={category.id}
+                  categoryColor={category.color}
+                  onAddPayment={onAddPayment}
+                  onDeletePayment={onDeletePayment}
+                  onDeleteItem={onDeleteItem}
+                  onCycleStatus={onCycleStatus}
+                  onUpdateItem={onUpdateLineItem}
+                  onAddAttachment={onAddAttachment}
+                  onDeleteAttachment={onDeleteAttachment}
+                />
+              </SortableItemWrapper>
+            ))}
+          </SortableContext>
 
           {adding ? (
             <form onSubmit={handleAddItem} className="flex items-end gap-2 p-3 rounded-lg border border-dashed border-border bg-muted/30">
