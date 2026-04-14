@@ -8,6 +8,38 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { House, Plus, AlertTriangle, Upload, Download, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import type { ItemStatus } from "@/types/project";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+  DragOverEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+function SortableCategoryWrapper({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: "relative" as const,
+    zIndex: isDragging ? 10 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      {children}
+    </div>
+  );
+}
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
@@ -23,6 +55,8 @@ export function ProjectTracker() {
     updateCategoryColor,
     deleteCategory,
     reorderCategories,
+    reorderLineItems,
+    moveLineItem,
     addLineItem,
     deleteLineItem,
     cycleLineItemStatus,
@@ -100,6 +134,73 @@ export function ProjectTracker() {
     setContingencyRates((prev) => ({ ...prev, [categoryId]: rate }));
   };
 
+  // DnD sensors - long press (250ms delay) to activate drag
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    })
+  );
+
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveDragId(String(event.active.id));
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveDragId(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    // Check if dragging a category (prefixed with "cat-")
+    if (activeId.startsWith("cat-") && overId.startsWith("cat-")) {
+      const fromIndex = project.categories.findIndex((c) => `cat-${c.id}` === activeId);
+      const toIndex = project.categories.findIndex((c) => `cat-${c.id}` === overId);
+      if (fromIndex !== -1 && toIndex !== -1) {
+        reorderCategories(fromIndex, toIndex);
+      }
+      return;
+    }
+
+    // Dragging an item (prefixed with "item-")
+    if (activeId.startsWith("item-")) {
+      const itemId = activeId.replace("item-", "");
+      // Find source category
+      const fromCat = project.categories.find((c) => c.items.some((i) => i.id === itemId));
+      if (!fromCat) return;
+
+      if (overId.startsWith("item-")) {
+        const overItemId = overId.replace("item-", "");
+        const toCat = project.categories.find((c) => c.items.some((i) => i.id === overItemId));
+        if (!toCat) return;
+
+        if (fromCat.id === toCat.id) {
+          const fromIndex = fromCat.items.findIndex((i) => i.id === itemId);
+          const toIndex = toCat.items.findIndex((i) => i.id === overItemId);
+          reorderLineItems(fromCat.id, fromIndex, toIndex);
+        } else {
+          const toIndex = toCat.items.findIndex((i) => i.id === overItemId);
+          moveLineItem(fromCat.id, toCat.id, itemId, toIndex);
+        }
+      } else if (overId.startsWith("cat-")) {
+        // Dropped on a category — move to end
+        const toCatId = overId.replace("cat-", "");
+        if (fromCat.id !== toCatId) {
+          const toCat = project.categories.find((c) => c.id === toCatId);
+          if (toCat) {
+            moveLineItem(fromCat.id, toCatId, itemId, toCat.items.length);
+          }
+        }
+      }
+    }
+  };
+
   const handleAddCategory = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategoryName.trim()) return;
@@ -174,7 +275,8 @@ export function ProjectTracker() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${project.name.replace(/\s+/g, "_")}_export.json`;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = `Cost-Cocoon-${dateStr}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -228,7 +330,7 @@ export function ProjectTracker() {
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(spendToDate)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Quoted Spend</p>
+            <p className="text-sm text-muted-foreground">Quoted Cost</p>
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(quotedSpend)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
@@ -240,7 +342,7 @@ export function ProjectTracker() {
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalContingency)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Total Spend</p>
+            <p className="text-sm text-muted-foreground">Total Cost</p>
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalSpend)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
@@ -379,28 +481,41 @@ export function ProjectTracker() {
           </div>
         )}
 
-        {project.categories.map((cat, index) => (
-          <CategoryCard
-            key={cat.id}
-            category={cat}
-            forceExpanded={allExpanded}
-            collapseSignal={collapseSignal}
-            visibleStatuses={visibleStatuses}
-            onAddLineItem={addLineItem}
-            onDeleteCategory={deleteCategory}
-            onUpdateCategory={updateCategory}
-            onUpdateCategoryColor={updateCategoryColor}
-            onUpdateLineItem={updateLineItem}
-            onAddPayment={addPayment}
-            onDeletePayment={deletePayment}
-            onDeleteItem={deleteLineItem}
-            onCycleStatus={cycleLineItemStatus}
-            onAddAttachment={addAttachment}
-            onDeleteAttachment={deleteAttachment}
-            onMoveUp={index > 0 ? () => reorderCategories(index, index - 1) : undefined}
-            onMoveDown={index < project.categories.length - 1 ? () => reorderCategories(index, index + 1) : undefined}
-          />
-        ))}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={project.categories.map((c) => `cat-${c.id}`)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-6">
+              {project.categories.map((cat) => (
+                <SortableCategoryWrapper key={cat.id} id={`cat-${cat.id}`}>
+                  <CategoryCard
+                    category={cat}
+                    forceExpanded={allExpanded}
+                    collapseSignal={collapseSignal}
+                    visibleStatuses={visibleStatuses}
+                    onAddLineItem={addLineItem}
+                    onDeleteCategory={deleteCategory}
+                    onUpdateCategory={updateCategory}
+                    onUpdateCategoryColor={updateCategoryColor}
+                    onUpdateLineItem={updateLineItem}
+                    onAddPayment={addPayment}
+                    onDeletePayment={deletePayment}
+                    onDeleteItem={deleteLineItem}
+                    onCycleStatus={cycleLineItemStatus}
+                    onAddAttachment={addAttachment}
+                    onDeleteAttachment={deleteAttachment}
+                  />
+                </SortableCategoryWrapper>
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
 
         {/* Add category */}
         {addingCategory ? (

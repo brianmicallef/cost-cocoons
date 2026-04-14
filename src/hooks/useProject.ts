@@ -115,6 +115,40 @@ export function useProject() {
       return { ...p, categories: cats };
     });
 
+  const reorderLineItems = (categoryId: string, fromIndex: number, toIndex: number) =>
+    updateProject((p) => ({
+      ...p,
+      categories: p.categories.map((c) => {
+        if (c.id !== categoryId) return c;
+        const items = [...c.items];
+        const [moved] = items.splice(fromIndex, 1);
+        items.splice(toIndex, 0, moved);
+        return { ...c, items };
+      }),
+    }));
+
+  const moveLineItem = (fromCategoryId: string, toCategoryId: string, itemId: string, toIndex: number) =>
+    updateProject((p) => {
+      const fromCat = p.categories.find((c) => c.id === fromCategoryId);
+      if (!fromCat) return p;
+      const item = fromCat.items.find((i) => i.id === itemId);
+      if (!item) return p;
+      return {
+        ...p,
+        categories: p.categories.map((c) => {
+          if (c.id === fromCategoryId) {
+            return { ...c, items: c.items.filter((i) => i.id !== itemId) };
+          }
+          if (c.id === toCategoryId) {
+            const items = [...c.items];
+            items.splice(toIndex, 0, item);
+            return { ...c, items };
+          }
+          return c;
+        }),
+      };
+    });
+
   const addLineItem = (categoryId: string, name: string, predictedCost: number, vendor: string = "") =>
     updateProject((p) => ({
       ...p,
@@ -353,6 +387,8 @@ export function useProject() {
     updateCategoryColor,
     deleteCategory,
     reorderCategories,
+    reorderLineItems,
+    moveLineItem,
     addLineItem,
     updateLineItem,
     cycleLineItemStatus,
