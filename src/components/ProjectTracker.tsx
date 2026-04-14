@@ -119,6 +119,73 @@ export function ProjectTracker() {
     setContingencyRates((prev) => ({ ...prev, [categoryId]: rate }));
   };
 
+  // DnD sensors - long press (250ms delay) to activate drag
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    })
+  );
+
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveDragId(String(event.active.id));
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveDragId(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    // Check if dragging a category (prefixed with "cat-")
+    if (activeId.startsWith("cat-") && overId.startsWith("cat-")) {
+      const fromIndex = project.categories.findIndex((c) => `cat-${c.id}` === activeId);
+      const toIndex = project.categories.findIndex((c) => `cat-${c.id}` === overId);
+      if (fromIndex !== -1 && toIndex !== -1) {
+        reorderCategories(fromIndex, toIndex);
+      }
+      return;
+    }
+
+    // Dragging an item (prefixed with "item-")
+    if (activeId.startsWith("item-")) {
+      const itemId = activeId.replace("item-", "");
+      // Find source category
+      const fromCat = project.categories.find((c) => c.items.some((i) => i.id === itemId));
+      if (!fromCat) return;
+
+      if (overId.startsWith("item-")) {
+        const overItemId = overId.replace("item-", "");
+        const toCat = project.categories.find((c) => c.items.some((i) => i.id === overItemId));
+        if (!toCat) return;
+
+        if (fromCat.id === toCat.id) {
+          const fromIndex = fromCat.items.findIndex((i) => i.id === itemId);
+          const toIndex = toCat.items.findIndex((i) => i.id === overItemId);
+          reorderLineItems(fromCat.id, fromIndex, toIndex);
+        } else {
+          const toIndex = toCat.items.findIndex((i) => i.id === overItemId);
+          moveLineItem(fromCat.id, toCat.id, itemId, toIndex);
+        }
+      } else if (overId.startsWith("cat-")) {
+        // Dropped on a category — move to end
+        const toCatId = overId.replace("cat-", "");
+        if (fromCat.id !== toCatId) {
+          const toCat = project.categories.find((c) => c.id === toCatId);
+          if (toCat) {
+            moveLineItem(fromCat.id, toCatId, itemId, toCat.items.length);
+          }
+        }
+      }
+    }
+  };
+
   const handleAddCategory = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategoryName.trim()) return;
