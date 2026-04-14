@@ -466,28 +466,41 @@ export function ProjectTracker() {
           </div>
         )}
 
-        {project.categories.map((cat, index) => (
-          <CategoryCard
-            key={cat.id}
-            category={cat}
-            forceExpanded={allExpanded}
-            collapseSignal={collapseSignal}
-            visibleStatuses={visibleStatuses}
-            onAddLineItem={addLineItem}
-            onDeleteCategory={deleteCategory}
-            onUpdateCategory={updateCategory}
-            onUpdateCategoryColor={updateCategoryColor}
-            onUpdateLineItem={updateLineItem}
-            onAddPayment={addPayment}
-            onDeletePayment={deletePayment}
-            onDeleteItem={deleteLineItem}
-            onCycleStatus={cycleLineItemStatus}
-            onAddAttachment={addAttachment}
-            onDeleteAttachment={deleteAttachment}
-            onMoveUp={index > 0 ? () => reorderCategories(index, index - 1) : undefined}
-            onMoveDown={index < project.categories.length - 1 ? () => reorderCategories(index, index + 1) : undefined}
-          />
-        ))}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={project.categories.map((c) => `cat-${c.id}`)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-6">
+              {project.categories.map((cat) => (
+                <SortableCategoryWrapper key={cat.id} id={`cat-${cat.id}`}>
+                  <CategoryCard
+                    category={cat}
+                    forceExpanded={allExpanded}
+                    collapseSignal={collapseSignal}
+                    visibleStatuses={visibleStatuses}
+                    onAddLineItem={addLineItem}
+                    onDeleteCategory={deleteCategory}
+                    onUpdateCategory={updateCategory}
+                    onUpdateCategoryColor={updateCategoryColor}
+                    onUpdateLineItem={updateLineItem}
+                    onAddPayment={addPayment}
+                    onDeletePayment={deletePayment}
+                    onDeleteItem={deleteLineItem}
+                    onCycleStatus={cycleLineItemStatus}
+                    onAddAttachment={addAttachment}
+                    onDeleteAttachment={deleteAttachment}
+                  />
+                </SortableCategoryWrapper>
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
 
         {/* Add category */}
         {addingCategory ? (
