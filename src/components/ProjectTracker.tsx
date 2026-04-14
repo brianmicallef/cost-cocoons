@@ -251,24 +251,37 @@ export function ProjectTracker() {
           </div>
         </div>
 
-        {/* Item count row */}
+        {/* Item count row – clickable filters */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Completed</p>
-            <p className="text-lg font-bold text-foreground mt-0.5">{completedCount}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Started</p>
-            <p className="text-lg font-bold text-foreground mt-0.5">{startedCount}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Quoted</p>
-            <p className="text-lg font-bold text-foreground mt-0.5">{quotedCount}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Unquoted</p>
-            <p className="text-lg font-bold text-foreground mt-0.5">{unquotedCount}</p>
-          </div>
+          {([
+            { status: 'done' as ItemStatus, label: 'Completed', count: completedCount },
+            { status: 'started' as ItemStatus, label: 'Started', count: startedCount },
+            { status: 'quote' as ItemStatus, label: 'Quoted', count: quotedCount },
+            { status: 'idea' as ItemStatus, label: 'Unquoted', count: unquotedCount },
+          ]).map(({ status, label, count }) => {
+            const active = visibleStatuses.has(status);
+            return (
+              <button
+                key={status}
+                onClick={() => {
+                  setVisibleStatuses((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(status)) next.delete(status);
+                    else next.add(status);
+                    return next;
+                  });
+                }}
+                className={`rounded-xl border p-4 text-left transition-colors cursor-pointer ${
+                  active
+                    ? "border-primary bg-primary/10 ring-1 ring-primary/30"
+                    : "border-border bg-card opacity-60 hover:opacity-80"
+                }`}
+              >
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="text-lg font-bold text-foreground mt-0.5">{count}</p>
+              </button>
+            );
+          })}
           <div className="rounded-xl border border-border bg-card p-4">
             <p className="text-xs text-muted-foreground">Total Items</p>
             <p className="text-lg font-bold text-foreground mt-0.5">{totalItemCount}</p>
@@ -348,28 +361,7 @@ export function ProjectTracker() {
 
         {/* Categories header with collapse toggle */}
         {project.categories.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 justify-end">
-            {(['idea', 'quote', 'started', 'done'] as ItemStatus[]).map((status) => {
-              const active = visibleStatuses.has(status);
-              return (
-                <Button
-                  key={status}
-                  variant={active ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    setVisibleStatuses((prev) => {
-                      const next = new Set(prev);
-                      if (next.has(status)) next.delete(status);
-                      else next.add(status);
-                      return next;
-                    });
-                  }}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </Button>
-              );
-            })}
-            <div className="w-px h-6 bg-border mx-1" />
+          <div className="flex items-center gap-2 justify-end">
             <Button
               variant="outline"
               size="sm"
