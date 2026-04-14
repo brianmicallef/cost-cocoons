@@ -174,7 +174,8 @@ export function ProjectTracker() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${project.name.replace(/\s+/g, "_")}_export.json`;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = `Cost-Cocoon-${dateStr}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -228,7 +229,7 @@ export function ProjectTracker() {
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(spendToDate)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Quoted Spend</p>
+            <p className="text-sm text-muted-foreground">Quoted Cost</p>
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(quotedSpend)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
@@ -240,7 +241,7 @@ export function ProjectTracker() {
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalContingency)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Total Spend</p>
+            <p className="text-sm text-muted-foreground">Total Cost</p>
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalSpend)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
