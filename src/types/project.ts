@@ -32,8 +32,16 @@ export interface Category {
   items: LineItem[];
 }
 
+export interface Reminder {
+  id: string;
+  text: string;
+  categoryId?: string;
+  itemId?: string;
+}
+
 export interface Project {
   id: string;
   name: string;
   categories: Category[];
+  reminders?: Reminder[];
 }

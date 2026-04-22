@@ -151,18 +151,34 @@ export function CategoryCard({
             </Button>
           </div>
         ) : (
-          <h2
-            className="text-lg font-semibold text-foreground flex-1 group flex items-center gap-2 cursor-pointer"
-            onDoubleClick={(e) => { e.stopPropagation(); setEditingName(true); }}
-          >
-            {category.name}
-            <button
-              onClick={(e) => { e.stopPropagation(); setEditingName(true); }}
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+          <div className="flex items-center gap-1 flex-1">
+            <h2
+              className="text-lg font-semibold text-foreground group flex items-center gap-2 cursor-pointer"
+              onDoubleClick={(e) => { e.stopPropagation(); setEditingName(true); }}
             >
-              <Pencil className="h-3.5 w-3.5" />
-            </button>
-          </h2>
+              {category.name}
+              <button
+                onClick={(e) => { e.stopPropagation(); setEditingName(true); }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+            </h2>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded(true);
+                setAdding(true);
+              }}
+              aria-label="Add item"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
         )}
 
         <div className="hidden sm:flex items-center gap-6 text-sm">
@@ -235,7 +251,7 @@ export function CategoryCard({
             ))}
           </SortableContext>
 
-          {adding ? (
+          {adding && (
             <form onSubmit={handleAddItem} className="flex items-end gap-2 p-3 rounded-lg border border-dashed border-border bg-muted/30">
               <div className="flex-1 space-y-1">
                 <label className="text-xs text-muted-foreground">Item Name</label>
@@ -270,13 +286,6 @@ export function CategoryCard({
                 Cancel
               </Button>
             </form>
-          ) : (
-            <button
-              onClick={() => setAdding(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-dashed border-border text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
-            >
-              <Plus className="h-4 w-4" /> Add Item
-            </button>
           )}
         </div>
       )}

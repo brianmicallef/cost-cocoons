@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import type { Project, Category, LineItem, Payment, Attachment, ItemStatus } from "@/types/project";
+import type { Project, Category, LineItem, Payment, Attachment, ItemStatus, Reminder } from "@/types/project";
 import { getNextColor } from "@/lib/categoryColors";
 
 const generateId = () => crypto.randomUUID();
 
 const migrateProject = (p: Project): Project => ({
   ...p,
+  reminders: p.reminders || [],
   categories: p.categories.map((c, i) => ({
     ...c,
     color: c.color || `hsl(${(i * 137) % 360}, 65%, 55%)`,
@@ -22,6 +23,7 @@ const defaultProject = (): Project => ({
   id: generateId(),
   name: "Roebuck Lane",
   categories: [],
+  reminders: [],
 });
 
 export function useProject() {
@@ -346,9 +348,11 @@ export function useProject() {
     });
   };
 
-  const fullImport = (categories: Category[]) => {
+  const fullImport = (categories: Category[], reminders?: Reminder[]) => {
     updateProject((p) => {
-      const updated = { ...p, categories: [...p.categories] };
+      const updated = { ...p, categories: [...p.categories], reminders: [...(p.reminders || [])] };
+      const categoryIdMap = new Map<string, string>();
+      const itemIdMap = new Map<string, string>();
       for (const importCat of categories) {
         let existing = updated.categories.find(
           (c) => c.name.toLowerCase() === importCat.name.toLowerCase()
@@ -363,18 +367,56 @@ export function useProject() {
           };
           updated.categories.push(existing);
         }
+        if (importCat.id) categoryIdMap.set(importCat.id, existing.id);
         for (const item of importCat.items) {
+          const newId = generateId();
+          if (item.id) itemIdMap.set(item.id, newId);
           existing.items.push({
             ...item,
-            id: generateId(),
+            id: newId,
             payments: (item.payments || []).map((p) => ({ ...p, id: generateId() })),
             attachments: (item.attachments || []).map((a) => ({ ...a, id: generateId() })),
+          });
+        }
+      }
+      if (reminders && reminders.length > 0) {
+        for (const r of reminders) {
+          const mappedCategoryId = r.categoryId ? categoryIdMap.get(r.categoryId) : undefined;
+          const mappedItemId = r.itemId ? itemIdMap.get(r.itemId) : undefined;
+          updated.reminders.push({
+            id: generateId(),
+            text: r.text,
+            categoryId: mappedCategoryId,
+            itemId: mappedItemId,
           });
         }
       }
       return updated;
     });
   };
+
+  const addReminder = (text: string, categoryId?: string, itemId?: string) =>
+    updateProject((p) => ({
+      ...p,
+      reminders: [...(p.reminders || []), { id: generateId(), text, categoryId, itemId }],
+    }));
+
+  const updateReminder = (
+    reminderId: string,
+    updates: Partial<Pick<Reminder, "text" | "categoryId" | "itemId">>
+  ) =>
+    updateProject((p) => ({
+      ...p,
+      reminders: (p.reminders || []).map((r) =>
+        r.id === reminderId ? { ...r, ...updates } : r
+      ),
+    }));
+
+  const deleteReminder = (reminderId: string) =>
+    updateProject((p) => ({
+      ...p,
+      reminders: (p.reminders || []).filter((r) => r.id !== reminderId),
+    }));
 
   return {
     project,
@@ -397,5 +439,8 @@ export function useProject() {
     deletePayment,
     addAttachment,
     deleteAttachment,
+    addReminder,
+    updateReminder,
+    deleteReminder,
   };
 }
