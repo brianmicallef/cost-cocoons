@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useProject } from "@/hooks/useProject";
 import { CategoryCard } from "./CategoryCard";
 import { ContingencySection } from "./ContingencySection";
+import { RemindersSection } from "./RemindersSection";
 import { CsvUploadDialog } from "./CsvUploadDialog";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,9 @@ export function ProjectTracker() {
     deletePayment,
     addAttachment,
     deleteAttachment,
+    addReminder,
+    updateReminder,
+    deleteReminder,
   } = useProject();
 
   const [addingCategory, setAddingCategory] = useState(false);
@@ -269,6 +273,7 @@ export function ProjectTracker() {
       project: {
         name: project.name,
         categories: project.categories,
+        reminders: project.reminders || [],
       },
     };
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
@@ -480,6 +485,16 @@ export function ProjectTracker() {
             </Button>
           </div>
         )}
+
+        <RemindersSection
+          reminders={project.reminders || []}
+          categories={project.categories}
+          onAddReminder={addReminder}
+          onUpdateReminder={updateReminder}
+          onDeleteReminder={deleteReminder}
+          forceExpanded={allExpanded}
+          collapseSignal={collapseSignal}
+        />
 
         <DndContext
           sensors={sensors}

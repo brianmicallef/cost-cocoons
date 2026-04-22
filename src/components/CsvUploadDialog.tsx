@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
-import type { Category } from "@/types/project";
+import type { Category, Reminder } from "@/types/project";
 
 interface ParsedRow {
   category: string;
@@ -23,7 +23,7 @@ interface ImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onImport: (rows: ParsedRow[]) => void;
-  onFullImport: (categories: Category[]) => void;
+  onFullImport: (categories: Category[], reminders?: Reminder[]) => void;
 }
 
 function parseCsv(text: string): ParsedRow[] {
@@ -70,7 +70,8 @@ type ImportMode = null | "csv" | "json";
 
 interface JsonImportData {
   categories: Category[];
-  summary: { categories: number; items: number; payments: number; attachments: number };
+  reminders: Reminder[];
+  summary: { categories: number; items: number; payments: number; attachments: number; reminders: number };
 }
 
 function parseJsonImport(text: string): JsonImportData | null {
@@ -79,6 +80,11 @@ function parseJsonImport(text: string): JsonImportData | null {
     // Support our export format
     const categories: Category[] = data?.project?.categories || data?.categories;
     if (!Array.isArray(categories)) return null;
+
+    const remindersRaw = data?.project?.reminders || data?.reminders;
+    const reminders: Reminder[] = Array.isArray(remindersRaw)
+      ? remindersRaw.filter((r) => r && typeof r.text === "string")
+      : [];
 
     let items = 0, payments = 0, attachments = 0;
     for (const cat of categories) {
@@ -89,7 +95,11 @@ function parseJsonImport(text: string): JsonImportData | null {
         attachments += (item.attachments || []).length;
       }
     }
-    return { categories, summary: { categories: categories.length, items, payments, attachments } };
+    return {
+      categories,
+      reminders,
+      summary: { categories: categories.length, items, payments, attachments, reminders: reminders.length },
+    };
   } catch {
     return null;
   }
@@ -136,9 +146,9 @@ export function CsvUploadDialog({ open, onOpenChange, onImport, onFullImport }: 
 
   const handleImport = () => {
     if (mode === "json" && jsonData) {
-      onFullImport(jsonData.categories);
+      onFullImport(jsonData.categories, jsonData.reminders);
       const s = jsonData.summary;
-      toast.success(`Imported ${s.categories} categories, ${s.items} items, ${s.payments} payments, ${s.attachments} attachments`);
+      toast.success(`Imported ${s.categories} categories, ${s.items} items, ${s.payments} payments, ${s.attachments} attachments, ${s.reminders} reminders`);
     } else if (mode === "csv" && csvRows.length > 0) {
       onImport(csvRows);
       toast.success(`Imported ${csvRows.length} items`);
@@ -198,6 +208,7 @@ export function CsvUploadDialog({ open, onOpenChange, onImport, onFullImport }: 
                 <span>Items: <strong className="text-foreground">{jsonData.summary.items}</strong></span>
                 <span>Payments: <strong className="text-foreground">{jsonData.summary.payments}</strong></span>
                 <span>Attachments: <strong className="text-foreground">{jsonData.summary.attachments}</strong></span>
+                <span>Reminders: <strong className="text-foreground">{jsonData.summary.reminders}</strong></span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">All data including payments, links, and attachments will be imported.</p>
             </div>
