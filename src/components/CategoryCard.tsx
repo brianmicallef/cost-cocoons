@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import type { Category, ItemStatus } from "@/types/project";
+import type { Category, ItemStatus, Reminder } from "@/types/project";
 import { LineItemRow } from "./LineItemRow";
+import { ReminderItem } from "./ReminderItem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ColorPickerDialog } from "./ColorPickerDialog";
@@ -13,6 +14,8 @@ interface CategoryCardProps {
   forceExpanded?: boolean;
   collapseSignal?: number;
   visibleStatuses?: Set<ItemStatus>;
+  reminders?: Reminder[];
+  allCategories?: Category[];
   onAddLineItem: (categoryId: string, name: string, predictedCost: number, vendor: string) => void;
   onUpdateCategory: (categoryId: string, name: string) => void;
   onUpdateCategoryColor: (categoryId: string, color: string) => void;
@@ -24,6 +27,11 @@ interface CategoryCardProps {
   onCycleStatus: (categoryId: string, itemId: string) => void;
   onAddAttachment: (categoryId: string, itemId: string, name: string, url: string, type: 'link' | 'file') => void;
   onDeleteAttachment: (categoryId: string, itemId: string, attachmentId: string) => void;
+  onUpdateReminder?: (
+    reminderId: string,
+    updates: Partial<Pick<Reminder, "text" | "categoryId" | "itemId">>
+  ) => void;
+  onDeleteReminder?: (reminderId: string) => void;
 }
 
 const fmt = (n: number) =>
@@ -48,6 +56,8 @@ export function CategoryCard({
   forceExpanded,
   collapseSignal,
   visibleStatuses,
+  reminders = [],
+  allCategories,
   onAddLineItem,
   onUpdateCategory,
   onUpdateCategoryColor,
@@ -59,6 +69,8 @@ export function CategoryCard({
   onCycleStatus,
   onAddAttachment,
   onDeleteAttachment,
+  onUpdateReminder,
+  onDeleteReminder,
 }: CategoryCardProps) {
   const [expanded, setExpanded] = useState(true);
 
@@ -229,6 +241,20 @@ export function CategoryCard({
 
       {expanded && (
         <div className="px-5 py-4 space-y-3">
+          {reminders.length > 0 && onUpdateReminder && onDeleteReminder && (
+            <div className="space-y-2">
+              {reminders.map((r) => (
+                <ReminderItem
+                  key={r.id}
+                  reminder={r}
+                  categories={allCategories ?? [category]}
+                  showTargetLabel={false}
+                  onUpdate={onUpdateReminder}
+                  onDelete={onDeleteReminder}
+                />
+              ))}
+            </div>
+          )}
           <SortableContext
             items={filteredItems.map((item) => `item-${item.id}`)}
             strategy={verticalListSortingStrategy}

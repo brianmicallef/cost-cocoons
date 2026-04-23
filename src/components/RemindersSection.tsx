@@ -1,15 +1,19 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Bell, ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, Plus } from "lucide-react";
 import type { Category, Reminder } from "@/types/project";
+import {
+  ReminderItem,
+  parseTargetValue,
+  renderTargetOptions,
+} from "./ReminderItem";
 
 interface RemindersSectionProps {
   reminders: Reminder[];
@@ -26,63 +30,6 @@ interface RemindersSectionProps {
 
 const UNLINKED_VALUE = "__none__";
 
-function buildTargetValue(r: Pick<Reminder, "categoryId" | "itemId">) {
-  if (r.itemId && r.categoryId) return `item:${r.categoryId}:${r.itemId}`;
-  if (r.categoryId) return `cat:${r.categoryId}`;
-  return UNLINKED_VALUE;
-}
-
-function parseTargetValue(value: string): { categoryId?: string; itemId?: string } {
-  if (value === UNLINKED_VALUE) return {};
-  if (value.startsWith("cat:")) {
-    return { categoryId: value.slice(4) };
-  }
-  if (value.startsWith("item:")) {
-    const rest = value.slice(5);
-    const sep = rest.indexOf(":");
-    if (sep === -1) return {};
-    return { categoryId: rest.slice(0, sep), itemId: rest.slice(sep + 1) };
-  }
-  return {};
-}
-
-function renderTargetOptions(categories: Category[]) {
-  const nodes: ReactNode[] = [];
-  nodes.push(
-    <SelectItem key="__none__" value={UNLINKED_VALUE}>
-      Unlinked
-    </SelectItem>
-  );
-  for (const c of categories) {
-    nodes.push(
-      <SelectItem key={`cat-${c.id}`} value={`cat:${c.id}`}>
-        <span className="flex items-center gap-2">
-          <span
-            className="h-2.5 w-2.5 rounded-full shrink-0"
-            style={{ backgroundColor: c.color }}
-          />
-          {c.name}
-        </span>
-      </SelectItem>
-    );
-    for (const i of c.items) {
-      nodes.push(
-        <SelectItem key={`item-${c.id}-${i.id}`} value={`item:${c.id}:${i.id}`}>
-          <span className="flex items-center gap-2 pl-4">
-            <span
-              className="h-2.5 w-2.5 rounded-full shrink-0"
-              style={{ backgroundColor: c.color }}
-            />
-            <span className="text-muted-foreground">{c.name} ·</span>
-            {i.name}
-          </span>
-        </SelectItem>
-      );
-    }
-  }
-  return nodes;
-}
-
 export function RemindersSection({
   reminders,
   categories,
@@ -92,14 +39,14 @@ export function RemindersSection({
   forceExpanded,
   collapseSignal,
 }: RemindersSectionProps) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [adding, setAdding] = useState(false);
   const [newText, setNewText] = useState("");
   const [newTarget, setNewTarget] = useState<string>(UNLINKED_VALUE);
 
   useEffect(() => {
-    if (collapseSignal !== undefined && forceExpanded !== undefined) {
-      setExpanded(forceExpanded);
+    if (collapseSignal !== undefined && forceExpanded === false) {
+      setExpanded(false);
     }
   }, [collapseSignal]);
 
@@ -123,17 +70,6 @@ export function RemindersSection({
   const handleStartAdd = () => {
     setExpanded(true);
     setAdding(true);
-  };
-
-  const getTargetLabel = (r: Reminder): { label: string; color?: string } => {
-    if (!r.categoryId) return { label: "Unlinked" };
-    const cat = categories.find((c) => c.id === r.categoryId);
-    if (!cat) return { label: "Unlinked" };
-    if (r.itemId) {
-      const item = cat.items.find((i) => i.id === r.itemId);
-      if (item) return { label: `${cat.name} · ${item.name}`, color: cat.color };
-    }
-    return { label: cat.name, color: cat.color };
   };
 
   return (
@@ -171,57 +107,15 @@ export function RemindersSection({
         <div className="px-5 pb-4 space-y-3">
           {reminders.length > 0 && (
             <div className="space-y-2">
-              {reminders.map((r) => {
-                const target = getTargetLabel(r);
-                return (
-                  <div
-                    key={r.id}
-                    className="grid grid-cols-1 sm:grid-cols-[1fr_220px_auto] gap-2 items-center px-3 py-2 rounded-lg border border-border bg-muted/20"
-                  >
-                    <Input
-                      value={r.text}
-                      onChange={(e) => onUpdateReminder(r.id, { text: e.target.value })}
-                      placeholder="Reminder text"
-                      className="h-9"
-                    />
-                    <Select
-                      value={buildTargetValue(r)}
-                      onValueChange={(v) => {
-                        const parsed = parseTargetValue(v);
-                        onUpdateReminder(r.id, {
-                          categoryId: parsed.categoryId,
-                          itemId: parsed.itemId,
-                        });
-                      }}
-                    >
-                      <SelectTrigger className="h-9">
-                        <SelectValue>
-                          <span className="flex items-center gap-2 truncate">
-                            {target.color && (
-                              <span
-                                className="h-2.5 w-2.5 rounded-full shrink-0"
-                                style={{ backgroundColor: target.color }}
-                              />
-                            )}
-                            <span className="truncate">{target.label}</span>
-                          </span>
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>{renderTargetOptions(categories)}</SelectContent>
-                    </Select>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDeleteReminder(r.id)}
-                      aria-label="Delete reminder"
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                );
-              })}
+              {reminders.map((r) => (
+                <ReminderItem
+                  key={r.id}
+                  reminder={r}
+                  categories={categories}
+                  onUpdate={onUpdateReminder}
+                  onDelete={onDeleteReminder}
+                />
+              ))}
             </div>
           )}
 
