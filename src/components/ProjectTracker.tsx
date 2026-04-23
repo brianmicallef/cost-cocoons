@@ -514,6 +514,8 @@ export function ProjectTracker() {
                     forceExpanded={allExpanded}
                     collapseSignal={collapseSignal}
                     visibleStatuses={visibleStatuses}
+                    reminders={(project.reminders || []).filter((r) => r.categoryId === cat.id)}
+                    allCategories={project.categories}
                     onAddLineItem={addLineItem}
                     onDeleteCategory={deleteCategory}
                     onUpdateCategory={updateCategory}
@@ -525,6 +527,8 @@ export function ProjectTracker() {
                     onCycleStatus={cycleLineItemStatus}
                     onAddAttachment={addAttachment}
                     onDeleteAttachment={deleteAttachment}
+                    onUpdateReminder={updateReminder}
+                    onDeleteReminder={deleteReminder}
                   />
                 </SortableCategoryWrapper>
               ))}
