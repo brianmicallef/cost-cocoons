@@ -266,18 +266,71 @@ export function CategoryCard({
 
       {expanded && (
         <div className="px-5 py-4 space-y-3">
-          {reminders.length > 0 && onUpdateReminder && onDeleteReminder && (
-            <div className="space-y-2">
-              {reminders.map((r) => (
-                <ReminderItem
-                  key={r.id}
-                  reminder={r}
-                  categories={allCategories ?? [category]}
-                  showTargetLabel={false}
-                  onUpdate={onUpdateReminder}
-                  onDelete={onDeleteReminder}
-                />
-              ))}
+          {(reminders.length > 0 || addingReminder) && onUpdateReminder && onDeleteReminder && (
+            <div className="rounded-lg border border-border/60 bg-muted/10">
+              <button
+                type="button"
+                onClick={() => setRemindersExpanded((v) => !v)}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+                aria-label={remindersExpanded ? "Collapse reminders" : "Expand reminders"}
+              >
+                {remindersExpanded ? (
+                  <ChevronDown className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronRight className="h-3.5 w-3.5" />
+                )}
+                <Bell className="h-3.5 w-3.5" />
+                <span>Reminders ({reminders.length})</span>
+              </button>
+              {remindersExpanded && (
+                <div className="px-2 pb-2 space-y-2">
+                  {reminders.map((r) => (
+                    <ReminderItem
+                      key={r.id}
+                      reminder={r}
+                      categories={allCategories ?? [category]}
+                      showTargetLabel={false}
+                      onUpdate={onUpdateReminder}
+                      onDelete={onDeleteReminder}
+                    />
+                  ))}
+                  {addingReminder && onAddReminder && (
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const t = newReminderText.trim();
+                        if (!t) return;
+                        onAddReminder(t, category.id);
+                        setNewReminderText("");
+                        setAddingReminder(false);
+                      }}
+                      className="flex items-center gap-2 px-1"
+                    >
+                      <Input
+                        value={newReminderText}
+                        onChange={(e) => setNewReminderText(e.target.value)}
+                        placeholder="Add a reminder…"
+                        className="h-8 text-sm"
+                        autoFocus
+                      />
+                      <Button type="submit" size="sm" disabled={!newReminderText.trim()}>
+                        Add
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setNewReminderText("");
+                          setAddingReminder(false);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </form>
+                  )}
+                </div>
+              )}
             </div>
           )}
           <SortableContext
