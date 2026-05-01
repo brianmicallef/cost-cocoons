@@ -358,35 +358,47 @@ export function ProjectTracker() {
           </div>
         </div>
 
-        {/* Item count row – clickable filters */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        {/* Item count row – clickable filters with progression arrows (left → right) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 items-stretch">
           {([
-            { status: 'done' as ItemStatus, label: 'Completed', count: completedCount },
-            { status: 'started' as ItemStatus, label: 'Started', count: startedCount },
-            { status: 'quote' as ItemStatus, label: 'Quoted', count: quotedCount },
             { status: 'idea' as ItemStatus, label: 'Unquoted', count: unquotedCount },
-          ]).map(({ status, label, count }) => {
+            { status: 'quote' as ItemStatus, label: 'Quoted', count: quotedCount },
+            { status: 'started' as ItemStatus, label: 'Started', count: startedCount },
+            { status: 'done' as ItemStatus, label: 'Completed', count: completedCount },
+          ]).map(({ status, label, count }, idx, arr) => {
             const active = visibleStatuses.has(status);
             return (
-              <button
-                key={status}
-                onClick={() => {
-                  setVisibleStatuses((prev) => {
-                    const next = new Set(prev);
-                    if (next.has(status)) next.delete(status);
-                    else next.add(status);
-                    return next;
-                  });
-                }}
-                className={`rounded-xl border p-4 text-left transition-colors cursor-pointer ${
-                  active
-                    ? "border-primary bg-primary/10 ring-1 ring-primary/30"
-                    : "border-border bg-card opacity-60 hover:opacity-80"
-                }`}
-              >
-                <p className="text-xs text-muted-foreground">{label}</p>
-                <p className="text-lg font-bold text-foreground mt-0.5">{count}</p>
-              </button>
+              <div key={status} className="relative flex items-center">
+                <button
+                  onClick={() => {
+                    setVisibleStatuses((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(status)) next.delete(status);
+                      else next.add(status);
+                      return next;
+                    });
+                  }}
+                  className={`flex-1 rounded-xl border p-4 text-left transition-colors cursor-pointer ${
+                    active
+                      ? "border-primary bg-primary/10 ring-1 ring-primary/30"
+                      : "border-border bg-card opacity-60 hover:opacity-80"
+                  }`}
+                >
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <span className="inline-block h-1 w-3 rounded-full" style={{ opacity: 0.3 + (idx * 0.23) }}>
+                      <span className="block h-full w-full rounded-full bg-primary" />
+                    </span>
+                    {label}
+                  </p>
+                  <p className="text-lg font-bold text-foreground mt-0.5">{count}</p>
+                </button>
+                {idx < arr.length - 1 && (
+                  <ChevronRight
+                    className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 z-10"
+                    aria-hidden
+                  />
+                )}
+              </div>
             );
           })}
           <div className="rounded-xl border border-border bg-card p-4">
