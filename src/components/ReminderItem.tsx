@@ -74,6 +74,8 @@ interface ReminderItemProps {
   reminder: Reminder;
   categories: Category[];
   showTargetLabel?: boolean;
+  /** When true, show only a colored dot (with hover tooltip) instead of the category name text. */
+  targetAsDotOnly?: boolean;
   onUpdate: (
     reminderId: string,
     updates: Partial<Pick<Reminder, "text" | "categoryId" | "itemId">>
@@ -85,6 +87,7 @@ export function ReminderItem({
   reminder,
   categories,
   showTargetLabel = true,
+  targetAsDotOnly = false,
   onUpdate,
   onDelete,
 }: ReminderItemProps) {
