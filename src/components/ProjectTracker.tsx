@@ -529,6 +529,7 @@ export function ProjectTracker() {
                     onDeleteAttachment={deleteAttachment}
                     onUpdateReminder={updateReminder}
                     onDeleteReminder={deleteReminder}
+                    onAddReminder={addReminder}
                   />
                 </SortableCategoryWrapper>
               ))}

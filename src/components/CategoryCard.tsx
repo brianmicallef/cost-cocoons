@@ -5,7 +5,7 @@ import { ReminderItem } from "./ReminderItem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ColorPickerDialog } from "./ColorPickerDialog";
-import { ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import { ChevronDown, ChevronRight, PlusCircle, Trash2, Pencil, Check, X, Bell } from "lucide-react";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -27,6 +27,7 @@ interface CategoryCardProps {
   onCycleStatus: (categoryId: string, itemId: string) => void;
   onAddAttachment: (categoryId: string, itemId: string, name: string, url: string, type: 'link' | 'file') => void;
   onDeleteAttachment: (categoryId: string, itemId: string, attachmentId: string) => void;
+  onAddReminder?: (text: string, categoryId?: string, itemId?: string) => void;
   onUpdateReminder?: (
     reminderId: string,
     updates: Partial<Pick<Reminder, "text" | "categoryId" | "itemId">>
@@ -71,8 +72,12 @@ export function CategoryCard({
   onDeleteAttachment,
   onUpdateReminder,
   onDeleteReminder,
+  onAddReminder,
 }: CategoryCardProps) {
   const [expanded, setExpanded] = useState(true);
+  const [remindersExpanded, setRemindersExpanded] = useState(true);
+  const [addingReminder, setAddingReminder] = useState(false);
+  const [newReminderText, setNewReminderText] = useState("");
 
   useEffect(() => {
     if (collapseSignal !== undefined && forceExpanded !== undefined) {
@@ -163,7 +168,7 @@ export function CategoryCard({
             </Button>
           </div>
         ) : (
-          <div className="flex items-center gap-1 flex-1">
+          <div className="flex items-center gap-2 flex-1 flex-wrap">
             <h2
               className="text-lg font-semibold text-foreground group flex items-center gap-2 cursor-pointer"
               onDoubleClick={(e) => { e.stopPropagation(); setEditingName(true); }}
@@ -179,17 +184,37 @@ export function CategoryCard({
             <Button
               type="button"
               variant="ghost"
-              size="icon"
+              size="sm"
               onClick={(e) => {
                 e.stopPropagation();
                 setExpanded(true);
                 setAdding(true);
               }}
               aria-label="Add item"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
             >
-              <Plus className="h-4 w-4" />
+              <PlusCircle className="h-3.5 w-3.5 mr-1" /> Add item
             </Button>
+            {onAddReminder && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExpanded(true);
+                  setRemindersExpanded(true);
+                  setAddingReminder(true);
+                }}
+                aria-label="Add reminder"
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <PlusCircle className="h-3.5 w-3.5 mr-1" /> Add reminder
+              </Button>
+            )}
+            <span className="text-xs text-muted-foreground ml-1">
+              {filteredItems.length} of {category.items.length} shown
+            </span>
           </div>
         )}
 
@@ -241,18 +266,71 @@ export function CategoryCard({
 
       {expanded && (
         <div className="px-5 py-4 space-y-3">
-          {reminders.length > 0 && onUpdateReminder && onDeleteReminder && (
-            <div className="space-y-2">
-              {reminders.map((r) => (
-                <ReminderItem
-                  key={r.id}
-                  reminder={r}
-                  categories={allCategories ?? [category]}
-                  showTargetLabel={false}
-                  onUpdate={onUpdateReminder}
-                  onDelete={onDeleteReminder}
-                />
-              ))}
+          {(reminders.length > 0 || addingReminder) && onUpdateReminder && onDeleteReminder && (
+            <div className="rounded-lg border border-border/60 bg-muted/10">
+              <button
+                type="button"
+                onClick={() => setRemindersExpanded((v) => !v)}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+                aria-label={remindersExpanded ? "Collapse reminders" : "Expand reminders"}
+              >
+                {remindersExpanded ? (
+                  <ChevronDown className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronRight className="h-3.5 w-3.5" />
+                )}
+                <Bell className="h-3.5 w-3.5" />
+                <span>Reminders ({reminders.length})</span>
+              </button>
+              {remindersExpanded && (
+                <div className="px-2 pb-2 space-y-2">
+                  {reminders.map((r) => (
+                    <ReminderItem
+                      key={r.id}
+                      reminder={r}
+                      categories={allCategories ?? [category]}
+                      showTargetLabel={false}
+                      onUpdate={onUpdateReminder}
+                      onDelete={onDeleteReminder}
+                    />
+                  ))}
+                  {addingReminder && onAddReminder && (
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const t = newReminderText.trim();
+                        if (!t) return;
+                        onAddReminder(t, category.id);
+                        setNewReminderText("");
+                        setAddingReminder(false);
+                      }}
+                      className="flex items-center gap-2 px-1"
+                    >
+                      <Input
+                        value={newReminderText}
+                        onChange={(e) => setNewReminderText(e.target.value)}
+                        placeholder="Add a reminder…"
+                        className="h-8 text-sm"
+                        autoFocus
+                      />
+                      <Button type="submit" size="sm" disabled={!newReminderText.trim()}>
+                        Add
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setNewReminderText("");
+                          setAddingReminder(false);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </form>
+                  )}
+                </div>
+              )}
             </div>
           )}
           <SortableContext

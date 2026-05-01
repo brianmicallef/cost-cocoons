@@ -74,6 +74,8 @@ interface ReminderItemProps {
   reminder: Reminder;
   categories: Category[];
   showTargetLabel?: boolean;
+  /** When true, show only a colored dot (with hover tooltip) instead of the category name text. */
+  targetAsDotOnly?: boolean;
   onUpdate: (
     reminderId: string,
     updates: Partial<Pick<Reminder, "text" | "categoryId" | "itemId">>
@@ -85,6 +87,7 @@ export function ReminderItem({
   reminder,
   categories,
   showTargetLabel = true,
+  targetAsDotOnly = false,
   onUpdate,
   onDelete,
 }: ReminderItemProps) {
@@ -165,12 +168,21 @@ export function ReminderItem({
       className="group flex items-start gap-2 px-3 py-2 rounded-lg border border-border bg-muted/20 cursor-pointer"
       onDoubleClick={() => handleStartEdit()}
     >
-      <Bell className="h-3.5 w-3.5 mt-1 shrink-0 text-muted-foreground" />
+      {targetAsDotOnly && target?.color ? (
+        <span
+          className="h-2.5 w-2.5 mt-1.5 rounded-full shrink-0 border border-border/40"
+          style={{ backgroundColor: target.color }}
+          title={target.label}
+          aria-label={target.label}
+        />
+      ) : (
+        <Bell className="h-3.5 w-3.5 mt-1 shrink-0 text-muted-foreground" />
+      )}
       <div className="flex-1 min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
         <span className="text-sm text-foreground break-words whitespace-pre-wrap">
           {reminder.text}
         </span>
-        {showTargetLabel && target && (
+        {showTargetLabel && !targetAsDotOnly && target && (
           <span className="text-muted-foreground text-xs flex items-center gap-1.5">
             <span>·</span>
             {target.color && (

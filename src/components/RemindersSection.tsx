@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Bell, ChevronDown, ChevronRight, Plus } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, PlusCircle } from "lucide-react";
 import type { Category, Reminder } from "@/types/project";
 import {
   ReminderItem,
@@ -88,15 +88,15 @@ export function RemindersSection({
         <Button
           type="button"
           variant="ghost"
-          size="icon"
+          size="sm"
           onClick={(e) => {
             e.stopPropagation();
             handleStartAdd();
           }}
           aria-label="Add reminder"
-          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+          className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
         >
-          <Plus className="h-4 w-4" />
+          <PlusCircle className="h-3.5 w-3.5 mr-1" /> Add reminder
         </Button>
         <span className="text-sm text-muted-foreground ml-auto">
           {reminders.length} {reminders.length === 1 ? "item" : "items"}
@@ -112,6 +112,7 @@ export function RemindersSection({
                   key={r.id}
                   reminder={r}
                   categories={categories}
+                  targetAsDotOnly
                   onUpdate={onUpdateReminder}
                   onDelete={onDeleteReminder}
                 />
