@@ -168,7 +168,7 @@ export function CategoryCard({
             </Button>
           </div>
         ) : (
-          <div className="flex items-center gap-1 flex-1">
+          <div className="flex items-center gap-2 flex-1 flex-wrap">
             <h2
               className="text-lg font-semibold text-foreground group flex items-center gap-2 cursor-pointer"
               onDoubleClick={(e) => { e.stopPropagation(); setEditingName(true); }}
@@ -184,17 +184,37 @@ export function CategoryCard({
             <Button
               type="button"
               variant="ghost"
-              size="icon"
+              size="sm"
               onClick={(e) => {
                 e.stopPropagation();
                 setExpanded(true);
                 setAdding(true);
               }}
               aria-label="Add item"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
             >
-              <Plus className="h-4 w-4" />
+              <PlusCircle className="h-3.5 w-3.5 mr-1" /> Add item
             </Button>
+            {onAddReminder && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExpanded(true);
+                  setRemindersExpanded(true);
+                  setAddingReminder(true);
+                }}
+                aria-label="Add reminder"
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <PlusCircle className="h-3.5 w-3.5 mr-1" /> Add reminder
+              </Button>
+            )}
+            <span className="text-xs text-muted-foreground ml-1">
+              {filteredItems.length} of {category.items.length} shown
+            </span>
           </div>
         )}
 
