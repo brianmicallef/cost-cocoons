@@ -5,7 +5,7 @@ import { ReminderItem } from "./ReminderItem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ColorPickerDialog } from "./ColorPickerDialog";
-import { ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import { ChevronDown, ChevronRight, PlusCircle, Trash2, Pencil, Check, X, Bell } from "lucide-react";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
