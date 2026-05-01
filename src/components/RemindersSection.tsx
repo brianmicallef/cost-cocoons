@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Bell, ChevronDown, ChevronRight, Plus } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, PlusCircle } from "lucide-react";
 import type { Category, Reminder } from "@/types/project";
 import {
   ReminderItem,
