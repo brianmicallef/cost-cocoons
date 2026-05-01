@@ -7,7 +7,7 @@ import { CsvUploadDialog } from "./CsvUploadDialog";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { House, Plus, AlertTriangle, Upload, Download, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
+import { House, Plus, AlertTriangle, Upload, Download, ChevronsDownUp, ChevronsUpDown, ChevronRight } from "lucide-react";
 import type { ItemStatus } from "@/types/project";
 import {
   DndContext,
