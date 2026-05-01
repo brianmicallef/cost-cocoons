@@ -27,6 +27,7 @@ interface CategoryCardProps {
   onCycleStatus: (categoryId: string, itemId: string) => void;
   onAddAttachment: (categoryId: string, itemId: string, name: string, url: string, type: 'link' | 'file') => void;
   onDeleteAttachment: (categoryId: string, itemId: string, attachmentId: string) => void;
+  onAddReminder?: (text: string, categoryId?: string, itemId?: string) => void;
   onUpdateReminder?: (
     reminderId: string,
     updates: Partial<Pick<Reminder, "text" | "categoryId" | "itemId">>
