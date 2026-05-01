@@ -112,6 +112,7 @@ export function RemindersSection({
                   key={r.id}
                   reminder={r}
                   categories={categories}
+                  targetAsDotOnly
                   onUpdate={onUpdateReminder}
                   onDelete={onDeleteReminder}
                 />
