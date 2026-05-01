@@ -413,56 +413,121 @@ export function ProjectTracker() {
           </div>
         </div>
 
-        {/* Overall progress - two bars showing spend vs budget and spend vs total (with contingency) */}
+        {/* Overall progress – combined Budget + Contingency bar */}
         {totalBudget > 0 && (
           <div className="rounded-xl border border-border bg-card p-5 space-y-4">
-            {/* Spend vs Budget (without contingency) */}
             <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Spend vs Budget</span>
-                <span className="font-medium">
-                  {fmt(totalSpent)} / {fmt(totalBudget)} ({Math.round(spendPctOfBudget)}%)
-                </span>
-              </div>
-              <div className="h-3 rounded-full bg-muted overflow-hidden flex">
-                {categoryData.map((c) =>
-                  c.spent > 0 ? (
-                    <div
-                      key={c.id}
-                      className="h-full transition-all first:rounded-l-full last:rounded-r-full"
-                      style={{
-                        width: `${(c.spent / totalBudget) * 100}%`,
-                        backgroundColor: c.color,
-                      }}
-                      title={`${c.name}: ${fmt(c.spent)}`}
-                    />
-                  ) : null
-                )}
-              </div>
-            </div>
-
-            {/* Spend vs Total Budget (with contingency) */}
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Spend vs Total Budget (incl. contingency)</span>
+              <div className="flex justify-between text-sm mb-2 flex-wrap gap-x-4 gap-y-1">
+                <span className="text-muted-foreground">Spend vs Total Budget</span>
                 <span className="font-medium">
                   {fmt(totalSpent)} / {fmt(totalWithContingency)} ({Math.round(spendPctOfTotal)}%)
                 </span>
               </div>
-              <div className="h-3 rounded-full bg-muted overflow-hidden flex">
-                {categoryData.map((c) =>
-                  c.spent > 0 ? (
-                    <div
-                      key={c.id}
-                      className="h-full transition-all first:rounded-l-full last:rounded-r-full"
-                      style={{
-                        width: `${(c.spent / totalWithContingency) * 100}%`,
-                        backgroundColor: c.color,
-                      }}
-                      title={`${c.name}: ${fmt(c.spent)}`}
-                    />
-                  ) : null
+
+              {/* Two-segment track: Budget | Contingency */}
+              <div
+                className="h-4 rounded-full bg-muted overflow-hidden flex"
+                style={{ minWidth: 0 }}
+              >
+                {/* Budget segment */}
+                <div
+                  className="h-full relative bg-muted/60 border-r border-background"
+                  style={{
+                    width: totalWithContingency > 0 ? `${(totalBudget / totalWithContingency) * 100}%` : "100%",
+                  }}
+                  title={`Budget: ${fmt(totalBudget)} – Spent ${fmt(Math.min(totalSpent, totalBudget))}`}
+                >
+                  <div className="absolute inset-y-0 left-0 flex h-full">
+                    {categoryData.map((c) => {
+                      const spentInBudget = Math.min(c.spent, c.budget);
+                      if (spentInBudget <= 0 || totalBudget <= 0) return null;
+                      return (
+                        <div
+                          key={c.id}
+                          className="h-full"
+                          style={{
+                            width: `${(spentInBudget / totalBudget) * 100}%`,
+                            backgroundColor: c.color,
+                          }}
+                          title={`${c.name}: ${fmt(spentInBudget)}`}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Contingency segment */}
+                {totalContingency > 0 && (
+                  <div
+                    className="h-full relative bg-accent/40"
+                    style={{
+                      width: `${(totalContingency / totalWithContingency) * 100}%`,
+                    }}
+                    title={`Contingency: ${fmt(totalContingency)} – Spent into ${fmt(Math.max(0, totalSpent - totalBudget))}`}
+                  >
+                    {totalSpent > totalBudget && (
+                      <div
+                        className="absolute inset-y-0 left-0 bg-destructive/70 h-full"
+                        style={{
+                          width: `${Math.min(100, ((totalSpent - totalBudget) / totalContingency) * 100)}%`,
+                        }}
+                      />
+                    )}
+                  </div>
                 )}
+              </div>
+
+              {/* Segment labels */}
+              <div className="flex text-xs mt-1.5" style={{ minWidth: 0 }}>
+                <div
+                  className="text-muted-foreground"
+                  style={{
+                    width: totalWithContingency > 0 ? `${(totalBudget / totalWithContingency) * 100}%` : "100%",
+                  }}
+                >
+                  Budget · {fmt(totalBudget)}
+                </div>
+                {totalContingency > 0 && (
+                  <div
+                    className="text-muted-foreground text-right"
+                    style={{
+                      width: `${(totalContingency / totalWithContingency) * 100}%`,
+                    }}
+                  >
+                    Contingency · {fmt(totalContingency)}
+                  </div>
+                )}
+              </div>
+
+              {/* Spend breakdown: budgeted / contingency / total */}
+              <div className="grid grid-cols-3 gap-3 mt-4">
+                <div className="rounded-lg border border-border bg-muted/30 p-3">
+                  <p className="text-xs text-muted-foreground">Spent in Budget</p>
+                  <p className="text-base font-semibold text-foreground mt-0.5">
+                    {fmt(Math.min(totalSpent, totalBudget))}
+                    <span className="text-xs font-normal text-muted-foreground ml-1">
+                      / {fmt(totalBudget)}
+                    </span>
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-accent/20 p-3">
+                  <p className="text-xs text-muted-foreground">Spent in Contingency</p>
+                  <p className={`text-base font-semibold mt-0.5 ${totalSpent > totalBudget ? "text-destructive" : "text-foreground"}`}>
+                    {fmt(Math.max(0, totalSpent - totalBudget))}
+                    <span className="text-xs font-normal text-muted-foreground ml-1">
+                      / {fmt(totalContingency)}
+                    </span>
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-card p-3">
+                  <p className="text-xs text-muted-foreground">Total Spent</p>
+                  <p className="text-base font-semibold text-foreground mt-0.5">
+                    {fmt(totalSpent)}
+                    <span className="text-xs font-normal text-muted-foreground ml-1">
+                      / {fmt(totalWithContingency)}
+                    </span>
+                  </p>
+                </div>
               </div>
             </div>
 
