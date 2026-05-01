@@ -72,8 +72,12 @@ export function CategoryCard({
   onDeleteAttachment,
   onUpdateReminder,
   onDeleteReminder,
+  onAddReminder,
 }: CategoryCardProps) {
   const [expanded, setExpanded] = useState(true);
+  const [remindersExpanded, setRemindersExpanded] = useState(true);
+  const [addingReminder, setAddingReminder] = useState(false);
+  const [newReminderText, setNewReminderText] = useState("");
 
   useEffect(() => {
     if (collapseSignal !== undefined && forceExpanded !== undefined) {
