@@ -1,0 +1,201 @@
+import { useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Wand2 } from "lucide-react";
+import type { MoodItem } from "@/types/project";
+
+interface AddMoodItemDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  boardName: string;
+  initial?: MoodItem;
+  onSubmit: (item: Omit<MoodItem, "id" | "createdAt">) => void;
+}
+
+export function AddMoodItemDialog({
+  open,
+  onOpenChange,
+  boardName,
+  initial,
+  onSubmit,
+}: AddMoodItemDialogProps) {
+  const [url, setUrl] = useState("");
+  const [title, setTitle] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [notes, setNotes] = useState("");
+  const [price, setPrice] = useState("");
+  const [tags, setTags] = useState("");
+  const [fetching, setFetching] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setUrl(initial?.url ?? "");
+      setTitle(initial?.title ?? "");
+      setImageUrl(initial?.imageUrl ?? "");
+      setNotes(initial?.notes ?? "");
+      setPrice(initial?.price !== undefined ? String(initial.price) : "");
+      setTags((initial?.tags || []).join(", "));
+      setFetchError(null);
+    }
+  }, [open, initial]);
+
+  const handleFetch = async () => {
+    if (!url.trim()) return;
+    setFetching(true);
+    setFetchError(null);
+    try {
+      const res = await fetch(`/.netlify/functions/og?url=${encodeURIComponent(url.trim())}`);
+      const data = await res.json();
+      if (data.title && !title) setTitle(data.title);
+      if (data.image && !imageUrl) setImageUrl(data.image);
+      if (data.description && !notes) setNotes(data.description);
+    } catch {
+      setFetchError("Couldn't fetch preview. You can fill in the fields manually.");
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() && !url.trim() && !imageUrl.trim()) return;
+    const parsedPrice = price.trim() === "" ? undefined : Number(price);
+    onSubmit({
+      title: title.trim() || (url.trim() ? new URL(url.trim()).hostname : "Untitled"),
+      url: url.trim() || undefined,
+      imageUrl: imageUrl.trim() || undefined,
+      notes: notes.trim() || undefined,
+      price: parsedPrice !== undefined && !Number.isNaN(parsedPrice) ? parsedPrice : undefined,
+      tags: tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
+      linkedCostItemId: initial?.linkedCostItemId,
+    });
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            {initial ? "Edit item" : "Add item"} — {boardName}
+          </DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="mb-url">Product URL</Label>
+            <div className="flex gap-2">
+              <Input
+                id="mb-url"
+                placeholder="https://..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleFetch}
+                disabled={!url.trim() || fetching}
+              >
+                {fetching ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Wand2 className="h-4 w-4 mr-1.5" /> Fetch
+                  </>
+                )}
+              </Button>
+            </div>
+            {fetchError && (
+              <p className="text-xs text-muted-foreground">{fetchError}</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="mb-title">Title</Label>
+            <Input
+              id="mb-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Brass pendant light"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="mb-image">Image URL</Label>
+            <Input
+              id="mb-image"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://..."
+            />
+            {imageUrl && (
+              <img
+                src={imageUrl}
+                alt="preview"
+                className="mt-2 h-32 w-full object-contain rounded border bg-muted"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="mb-price">Price (£)</Label>
+              <Input
+                id="mb-price"
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="0"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="mb-tags">Tags (comma-separated)</Label>
+              <Input
+                id="mb-tags"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="kitchen, brass"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="mb-notes">Notes</Label>
+            <Textarea
+              id="mb-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              placeholder="Optional notes…"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">{initial ? "Save" : "Add item"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
