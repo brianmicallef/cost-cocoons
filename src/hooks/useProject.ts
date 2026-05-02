@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import type { Project, Category, LineItem, Payment, Attachment, ItemStatus, Reminder } from "@/types/project";
+import type { Project, Category, LineItem, Payment, Attachment, ItemStatus, Reminder, MoodBoard, MoodItem } from "@/types/project";
 import { getNextColor } from "@/lib/categoryColors";
 
 const generateId = () => crypto.randomUUID();
@@ -7,6 +7,7 @@ const generateId = () => crypto.randomUUID();
 const migrateProject = (p: Project): Project => ({
   ...p,
   reminders: p.reminders || [],
+  moodboard: p.moodboard || { boards: [] },
   categories: p.categories.map((c, i) => ({
     ...c,
     color: c.color || `hsl(${(i * 137) % 360}, 65%, 55%)`,
@@ -24,6 +25,7 @@ const defaultProject = (): Project => ({
   name: "Roebuck Lane",
   categories: [],
   reminders: [],
+  moodboard: { boards: [] },
 });
 
 export function useProject() {
