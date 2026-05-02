@@ -39,9 +39,29 @@ export interface Reminder {
   itemId?: string;
 }
 
+export interface MoodItem {
+  id: string;
+  title: string;
+  url?: string;
+  imageUrl?: string;
+  notes?: string;
+  price?: number;
+  tags?: string[];
+  createdAt: string;
+  linkedCostItemId?: string;
+}
+
+export interface MoodBoard {
+  id: string;
+  name: string;
+  color: string;
+  items: MoodItem[];
+}
+
 export interface Project {
   id: string;
   name: string;
   categories: Category[];
   reminders?: Reminder[];
+  moodboard?: { boards: MoodBoard[] };
 }
