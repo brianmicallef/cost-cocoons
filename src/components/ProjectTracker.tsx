@@ -5,6 +5,7 @@ import { ContingencySection } from "./ContingencySection";
 import { RemindersSection } from "./RemindersSection";
 import { CsvUploadDialog } from "./CsvUploadDialog";
 import { ThemeToggle } from "./ThemeToggle";
+import { TopNav } from "./TopNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { House, Plus, AlertTriangle, Upload, Download, ChevronsDownUp, ChevronsUpDown, ChevronRight } from "lucide-react";
@@ -313,9 +314,10 @@ export function ProjectTracker() {
           </div>
           <div className="flex-1">
             <h1 className="text-xl font-bold text-foreground">{project.name}</h1>
-            <p className="text-sm text-muted-foreground">Cost Tracker v0.2</p>
+            <p className="text-sm text-muted-foreground">Cost Tracker v0.3</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <TopNav />
             <ThemeToggle />
             <Button variant="outline" size="sm" onClick={() => setCsvDialogOpen(true)}>
               <Upload className="h-4 w-4 mr-1.5" /> Import
