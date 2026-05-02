@@ -420,6 +420,189 @@ export function useProject() {
       reminders: (p.reminders || []).filter((r) => r.id !== reminderId),
     }));
 
+  // ===== Moodboard =====
+  const getBoards = (p: Project) => p.moodboard?.boards || [];
+
+  const addBoard = (name: string) =>
+    updateProject((p) => {
+      const boards = getBoards(p);
+      const usedColors = boards.map((b) => b.color);
+      const color = getNextColor(usedColors);
+      return {
+        ...p,
+        moodboard: {
+          boards: [...boards, { id: generateId(), name, color, items: [] }],
+        },
+      };
+    });
+
+  const renameBoard = (boardId: string, name: string) =>
+    updateProject((p) => ({
+      ...p,
+      moodboard: {
+        boards: getBoards(p).map((b) => (b.id === boardId ? { ...b, name } : b)),
+      },
+    }));
+
+  const updateBoardColor = (boardId: string, color: string) =>
+    updateProject((p) => ({
+      ...p,
+      moodboard: {
+        boards: getBoards(p).map((b) => (b.id === boardId ? { ...b, color } : b)),
+      },
+    }));
+
+  const deleteBoard = (boardId: string) =>
+    updateProject((p) => ({
+      ...p,
+      moodboard: { boards: getBoards(p).filter((b) => b.id !== boardId) },
+    }));
+
+  const reorderBoards = (fromIndex: number, toIndex: number) =>
+    updateProject((p) => {
+      const boards = [...getBoards(p)];
+      const [moved] = boards.splice(fromIndex, 1);
+      boards.splice(toIndex, 0, moved);
+      return { ...p, moodboard: { boards } };
+    });
+
+  const addMoodItem = (
+    boardId: string,
+    item: Omit<MoodItem, "id" | "createdAt">
+  ) =>
+    updateProject((p) => ({
+      ...p,
+      moodboard: {
+        boards: getBoards(p).map((b) =>
+          b.id === boardId
+            ? {
+                ...b,
+                items: [
+                  ...b.items,
+                  { ...item, id: generateId(), createdAt: new Date().toISOString() },
+                ],
+              }
+            : b
+        ),
+      },
+    }));
+
+  const updateMoodItem = (
+    boardId: string,
+    itemId: string,
+    updates: Partial<Omit<MoodItem, "id" | "createdAt">>
+  ) =>
+    updateProject((p) => ({
+      ...p,
+      moodboard: {
+        boards: getBoards(p).map((b) =>
+          b.id === boardId
+            ? {
+                ...b,
+                items: b.items.map((i) => (i.id === itemId ? { ...i, ...updates } : i)),
+              }
+            : b
+        ),
+      },
+    }));
+
+  const deleteMoodItem = (boardId: string, itemId: string) =>
+    updateProject((p) => ({
+      ...p,
+      moodboard: {
+        boards: getBoards(p).map((b) =>
+          b.id === boardId ? { ...b, items: b.items.filter((i) => i.id !== itemId) } : b
+        ),
+      },
+    }));
+
+  const reorderMoodItems = (boardId: string, fromIndex: number, toIndex: number) =>
+    updateProject((p) => ({
+      ...p,
+      moodboard: {
+        boards: getBoards(p).map((b) => {
+          if (b.id !== boardId) return b;
+          const items = [...b.items];
+          const [moved] = items.splice(fromIndex, 1);
+          items.splice(toIndex, 0, moved);
+          return { ...b, items };
+        }),
+      },
+    }));
+
+  const moveMoodItem = (
+    fromBoardId: string,
+    toBoardId: string,
+    itemId: string,
+    toIndex: number
+  ) =>
+    updateProject((p) => {
+      const boards = getBoards(p);
+      const fromBoard = boards.find((b) => b.id === fromBoardId);
+      if (!fromBoard) return p;
+      const item = fromBoard.items.find((i) => i.id === itemId);
+      if (!item) return p;
+      return {
+        ...p,
+        moodboard: {
+          boards: boards.map((b) => {
+            if (b.id === fromBoardId) {
+              return { ...b, items: b.items.filter((i) => i.id !== itemId) };
+            }
+            if (b.id === toBoardId) {
+              const items = [...b.items];
+              items.splice(toIndex, 0, item);
+              return { ...b, items };
+            }
+            return b;
+          }),
+        },
+      };
+    });
+
+  // Promote a moodboard item to a cost-tracker line item.
+  const promoteMoodItemToCost = (
+    boardId: string,
+    itemId: string,
+    targetCategoryId: string
+  ) =>
+    updateProject((p) => {
+      const boards = getBoards(p);
+      const board = boards.find((b) => b.id === boardId);
+      const moodItem = board?.items.find((i) => i.id === itemId);
+      if (!board || !moodItem) return p;
+      const newLineItemId = generateId();
+      const newLineItem: LineItem = {
+        id: newLineItemId,
+        name: moodItem.title,
+        vendor: "",
+        predictedCost: moodItem.price ?? 0,
+        payments: [],
+        attachments: moodItem.url
+          ? [{ id: generateId(), name: moodItem.title || "Source", url: moodItem.url, type: "link" }]
+          : [],
+        status: "idea",
+      };
+      return {
+        ...p,
+        categories: p.categories.map((c) =>
+          c.id === targetCategoryId ? { ...c, items: [...c.items, newLineItem] } : c
+        ),
+        moodboard: {
+          boards: boards.map((b) =>
+            b.id === boardId
+              ? {
+                  ...b,
+                  items: b.items.map((i) =>
+                    i.id === itemId ? { ...i, linkedCostItemId: newLineItemId } : i
+                  ),
+                }
+              : b
+          ),
+        },
+      };
+    });
+
   return {
     project,
     loading,
@@ -444,5 +627,17 @@ export function useProject() {
     addReminder,
     updateReminder,
     deleteReminder,
+    // moodboard
+    addBoard,
+    renameBoard,
+    updateBoardColor,
+    deleteBoard,
+    reorderBoards,
+    addMoodItem,
+    updateMoodItem,
+    deleteMoodItem,
+    reorderMoodItems,
+    moveMoodItem,
+    promoteMoodItemToCost,
   };
 }
