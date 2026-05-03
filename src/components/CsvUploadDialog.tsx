@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
-import type { Category, Reminder } from "@/types/project";
+import type { Category, Reminder, MoodBoard } from "@/types/project";
 
 interface ParsedRow {
   category: string;
@@ -23,7 +23,7 @@ interface ImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onImport: (rows: ParsedRow[]) => void;
-  onFullImport: (categories: Category[], reminders?: Reminder[]) => void;
+  onFullImport: (categories: Category[], reminders?: Reminder[], moodboard?: { boards: MoodBoard[] }) => void;
 }
 
 function parseCsv(text: string): ParsedRow[] {
