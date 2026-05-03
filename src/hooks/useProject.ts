@@ -350,9 +350,18 @@ export function useProject() {
     });
   };
 
-  const fullImport = (categories: Category[], reminders?: Reminder[]) => {
+  const fullImport = (
+    categories: Category[],
+    reminders?: Reminder[],
+    moodboard?: { boards: MoodBoard[] }
+  ) => {
     updateProject((p) => {
-      const updated = { ...p, categories: [...p.categories], reminders: [...(p.reminders || [])] };
+      const updated = {
+        ...p,
+        categories: [...p.categories],
+        reminders: [...(p.reminders || [])],
+        moodboard: { boards: [...(p.moodboard?.boards || [])] },
+      };
       const categoryIdMap = new Map<string, string>();
       const itemIdMap = new Map<string, string>();
       for (const importCat of categories) {
@@ -391,6 +400,33 @@ export function useProject() {
             categoryId: mappedCategoryId,
             itemId: mappedItemId,
           });
+        }
+      }
+      if (moodboard?.boards?.length) {
+        for (const importBoard of moodboard.boards) {
+          let existingBoard = updated.moodboard.boards.find(
+            (b) => b.name.toLowerCase() === importBoard.name.toLowerCase()
+          );
+          if (!existingBoard) {
+            const usedColors = updated.moodboard.boards.map((b) => b.color);
+            existingBoard = {
+              id: generateId(),
+              name: importBoard.name,
+              color: importBoard.color || getNextColor(usedColors),
+              items: [],
+            };
+            updated.moodboard.boards.push(existingBoard);
+          }
+          for (const mItem of importBoard.items || []) {
+            const linkedMapped = mItem.linkedCostItemId
+              ? itemIdMap.get(mItem.linkedCostItemId)
+              : undefined;
+            existingBoard.items.push({
+              ...mItem,
+              id: generateId(),
+              linkedCostItemId: linkedMapped,
+            });
+          }
         }
       }
       return updated;
