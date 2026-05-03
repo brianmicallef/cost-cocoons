@@ -71,13 +71,13 @@ type ImportMode = null | "csv" | "json";
 interface JsonImportData {
   categories: Category[];
   reminders: Reminder[];
-  summary: { categories: number; items: number; payments: number; attachments: number; reminders: number };
+  moodboard: { boards: MoodBoard[] };
+  summary: { categories: number; items: number; payments: number; attachments: number; reminders: number; boards: number; moodItems: number };
 }
 
 function parseJsonImport(text: string): JsonImportData | null {
   try {
     const data = JSON.parse(text);
-    // Support our export format
     const categories: Category[] = data?.project?.categories || data?.categories;
     if (!Array.isArray(categories)) return null;
 
@@ -85,6 +85,9 @@ function parseJsonImport(text: string): JsonImportData | null {
     const reminders: Reminder[] = Array.isArray(remindersRaw)
       ? remindersRaw.filter((r) => r && typeof r.text === "string")
       : [];
+
+    const moodboardRaw = data?.project?.moodboard || data?.moodboard;
+    const boards: MoodBoard[] = Array.isArray(moodboardRaw?.boards) ? moodboardRaw.boards : [];
 
     let items = 0, payments = 0, attachments = 0;
     for (const cat of categories) {
@@ -95,10 +98,14 @@ function parseJsonImport(text: string): JsonImportData | null {
         attachments += (item.attachments || []).length;
       }
     }
+    let moodItems = 0;
+    for (const b of boards) moodItems += (b.items || []).length;
+
     return {
       categories,
       reminders,
-      summary: { categories: categories.length, items, payments, attachments, reminders: reminders.length },
+      moodboard: { boards },
+      summary: { categories: categories.length, items, payments, attachments, reminders: reminders.length, boards: boards.length, moodItems },
     };
   } catch {
     return null;
