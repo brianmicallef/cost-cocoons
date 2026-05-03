@@ -332,12 +332,47 @@ export function ProjectTracker() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        {/* Spend to Date - collapsible breakdown by category */}
+        <Collapsible className="rounded-xl border border-border bg-card">
+          <CollapsibleTrigger className="w-full flex items-center justify-between p-5 group">
+            <div className="text-left">
+              <p className="text-sm text-muted-foreground">Spend to Date</p>
+              <p className="text-2xl font-bold text-foreground mt-1">{fmt(spendToDate)}</p>
+            </div>
+            <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="px-5 pb-5 pt-0 border-t border-border">
+              {categoryData.filter((c) => c.spent > 0).length === 0 ? (
+                <p className="text-sm text-muted-foreground py-3">No payments recorded yet.</p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {categoryData
+                    .filter((c) => c.spent > 0)
+                    .sort((a, b) => b.spent - a.spent)
+                    .map((c) => {
+                      const pct = spendToDate > 0 ? (c.spent / spendToDate) * 100 : 0;
+                      return (
+                        <li key={c.id} className="flex items-center justify-between py-2 text-sm">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
+                            <span className="truncate text-foreground">{c.name}</span>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="text-xs text-muted-foreground tabular-nums">{pct.toFixed(0)}%</span>
+                            <span className="font-medium text-foreground tabular-nums">{fmt(c.spent)}</span>
+                          </div>
+                        </li>
+                      );
+                    })}
+                </ul>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
         {/* Summary cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Spend to Date</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{fmt(spendToDate)}</p>
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           <div className="rounded-xl border border-border bg-card p-5">
             <p className="text-sm text-muted-foreground">Quoted Cost</p>
             <p className="text-2xl font-bold text-foreground mt-1">{fmt(quotedSpend)}</p>
