@@ -83,9 +83,15 @@ export function MoodboardPage() {
             <h1 className="text-xl font-bold text-foreground truncate">{project.name}</h1>
             <p className="text-sm text-muted-foreground">Moodboard</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
             <TopNav />
             <ThemeToggle />
+            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+              <Upload className="h-4 w-4 mr-1.5" /> Import
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <Download className="h-4 w-4 mr-1.5" /> Export
+            </Button>
           </div>
         </div>
       </header>
