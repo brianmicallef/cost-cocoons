@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopNav } from "@/components/TopNav";
-import { House, Plus, Image as ImageIcon } from "lucide-react";
+import { House, Plus, Image as ImageIcon, Upload, Download } from "lucide-react";
 import { MoodBoardCard } from "./MoodBoardCard";
+import { CsvUploadDialog } from "@/components/CsvUploadDialog";
 
 export function MoodboardPage() {
   const {
