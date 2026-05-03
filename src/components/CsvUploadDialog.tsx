@@ -153,9 +153,9 @@ export function CsvUploadDialog({ open, onOpenChange, onImport, onFullImport }: 
 
   const handleImport = () => {
     if (mode === "json" && jsonData) {
-      onFullImport(jsonData.categories, jsonData.reminders);
+      onFullImport(jsonData.categories, jsonData.reminders, jsonData.moodboard);
       const s = jsonData.summary;
-      toast.success(`Imported ${s.categories} categories, ${s.items} items, ${s.payments} payments, ${s.attachments} attachments, ${s.reminders} reminders`);
+      toast.success(`Imported ${s.categories} categories, ${s.items} items, ${s.payments} payments, ${s.attachments} attachments, ${s.reminders} reminders, ${s.boards} boards, ${s.moodItems} moodboard items`);
     } else if (mode === "csv" && csvRows.length > 0) {
       onImport(csvRows);
       toast.success(`Imported ${csvRows.length} items`);
