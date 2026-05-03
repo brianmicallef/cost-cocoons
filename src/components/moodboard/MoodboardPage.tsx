@@ -38,6 +38,27 @@ export function MoodboardPage() {
     setAdding(false);
   };
 
+  const handleExport = () => {
+    const exportData = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      project: {
+        name: project.name,
+        categories: project.categories,
+        reminders: project.reminders || [],
+        moodboard: project.moodboard || { boards: [] },
+      },
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = `Cost-Cocoon-${dateStr}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
