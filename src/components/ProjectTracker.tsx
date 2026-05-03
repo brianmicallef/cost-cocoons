@@ -8,7 +8,8 @@ import { ThemeToggle } from "./ThemeToggle";
 import { TopNav } from "./TopNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { House, Plus, AlertTriangle, Upload, Download, ChevronsDownUp, ChevronsUpDown, ChevronRight } from "lucide-react";
+import { House, Plus, AlertTriangle, Upload, Download, ChevronsDownUp, ChevronsUpDown, ChevronRight, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { ItemStatus } from "@/types/project";
 import {
   DndContext,
