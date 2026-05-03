@@ -164,6 +164,13 @@ export function MoodboardPage() {
           </div>
         )}
       </main>
+
+      <CsvUploadDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImport={bulkImport}
+        onFullImport={fullImport}
+      />
     </div>
   );
 }
