@@ -216,6 +216,8 @@ export function CsvUploadDialog({ open, onOpenChange, onImport, onFullImport }: 
                 <span>Payments: <strong className="text-foreground">{jsonData.summary.payments}</strong></span>
                 <span>Attachments: <strong className="text-foreground">{jsonData.summary.attachments}</strong></span>
                 <span>Reminders: <strong className="text-foreground">{jsonData.summary.reminders}</strong></span>
+                <span>Mood boards: <strong className="text-foreground">{jsonData.summary.boards}</strong></span>
+                <span>Mood items: <strong className="text-foreground">{jsonData.summary.moodItems}</strong></span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">All data including payments, links, and attachments will be imported.</p>
             </div>
