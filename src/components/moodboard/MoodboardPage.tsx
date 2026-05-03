@@ -19,7 +19,11 @@ export function MoodboardPage() {
     updateMoodItem,
     deleteMoodItem,
     promoteMoodItemToCost,
+    bulkImport,
+    fullImport,
   } = useProject();
+
+  const [importOpen, setImportOpen] = useState(false);
 
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
