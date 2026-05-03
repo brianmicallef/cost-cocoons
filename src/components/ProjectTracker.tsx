@@ -275,6 +275,7 @@ export function ProjectTracker() {
         name: project.name,
         categories: project.categories,
         reminders: project.reminders || [],
+        moodboard: project.moodboard || { boards: [] },
       },
     };
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });

@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopNav } from "@/components/TopNav";
-import { House, Plus, Image as ImageIcon } from "lucide-react";
+import { House, Plus, Image as ImageIcon, Upload, Download } from "lucide-react";
 import { MoodBoardCard } from "./MoodBoardCard";
+import { CsvUploadDialog } from "@/components/CsvUploadDialog";
 
 export function MoodboardPage() {
   const {
@@ -18,7 +19,11 @@ export function MoodboardPage() {
     updateMoodItem,
     deleteMoodItem,
     promoteMoodItemToCost,
+    bulkImport,
+    fullImport,
   } = useProject();
+
+  const [importOpen, setImportOpen] = useState(false);
 
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
@@ -31,6 +36,27 @@ export function MoodboardPage() {
     addBoard(newName.trim());
     setNewName("");
     setAdding(false);
+  };
+
+  const handleExport = () => {
+    const exportData = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      project: {
+        name: project.name,
+        categories: project.categories,
+        reminders: project.reminders || [],
+        moodboard: project.moodboard || { boards: [] },
+      },
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = `Cost-Cocoon-${dateStr}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -57,9 +83,15 @@ export function MoodboardPage() {
             <h1 className="text-xl font-bold text-foreground truncate">{project.name}</h1>
             <p className="text-sm text-muted-foreground">Moodboard</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
             <TopNav />
             <ThemeToggle />
+            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+              <Upload className="h-4 w-4 mr-1.5" /> Import
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <Download className="h-4 w-4 mr-1.5" /> Export
+            </Button>
           </div>
         </div>
       </header>
@@ -132,6 +164,13 @@ export function MoodboardPage() {
           </div>
         )}
       </main>
+
+      <CsvUploadDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImport={bulkImport}
+        onFullImport={fullImport}
+      />
     </div>
   );
 }
