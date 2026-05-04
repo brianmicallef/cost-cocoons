@@ -329,26 +329,27 @@ export function ProjectTracker() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* Summary cards */}
+        {/* Summary cards – cost by status + overspend */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          {([
+            { label: 'Unquoted', value: unquotedSpend, Icon: Lightbulb },
+            { label: 'Quoted', value: quotedSpend, Icon: FileText },
+            { label: 'Started', value: startedSpend, Icon: Hammer },
+            { label: 'Completed', value: completedSpend, Icon: CheckCircle2 },
+          ]).map(({ label, value, Icon }) => (
+            <div key={label} className="rounded-xl border border-border bg-card p-5">
+              <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                <Icon className="h-4 w-4 text-primary" />
+                {label}
+              </p>
+              <p className="text-2xl font-bold text-foreground mt-1">{fmt(value)}</p>
+            </div>
+          ))}
           <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Quoted Cost</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{fmt(quotedSpend)}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Ideas</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{fmt(unquotedSpend)}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Contingency</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalContingency)}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Total Cost</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{fmt(totalSpend)}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Overspend</p>
+            <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              Overspend
+            </p>
             <p className={`text-2xl font-bold mt-1 ${overspend > 0 ? "text-destructive" : "text-success"}`}>
               {fmt(overspend)}
             </p>
@@ -358,11 +359,11 @@ export function ProjectTracker() {
         {/* Item count row – clickable filters with progression arrows (left → right) */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 items-stretch">
           {([
-            { status: 'idea' as ItemStatus, label: 'Unquoted', count: unquotedCount },
-            { status: 'quote' as ItemStatus, label: 'Quoted', count: quotedCount },
-            { status: 'started' as ItemStatus, label: 'Started', count: startedCount },
-            { status: 'done' as ItemStatus, label: 'Completed', count: completedCount },
-          ]).map(({ status, label, count }, idx, arr) => {
+            { status: 'idea' as ItemStatus, label: 'Unquoted', count: unquotedCount, Icon: Lightbulb },
+            { status: 'quote' as ItemStatus, label: 'Quoted', count: quotedCount, Icon: FileText },
+            { status: 'started' as ItemStatus, label: 'Started', count: startedCount, Icon: Hammer },
+            { status: 'done' as ItemStatus, label: 'Completed', count: completedCount, Icon: CheckCircle2 },
+          ]).map(({ status, label, count, Icon }, idx, arr) => {
             const active = visibleStatuses.has(status);
             return (
               <div key={status} className="relative flex items-center">
@@ -381,10 +382,8 @@ export function ProjectTracker() {
                       : "border-border bg-card opacity-60 hover:opacity-80"
                   }`}
                 >
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <span className="inline-block h-1 w-3 rounded-full" style={{ opacity: 0.3 + (idx * 0.23) }}>
-                      <span className="block h-full w-full rounded-full bg-primary" />
-                    </span>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <Icon className="h-3.5 w-3.5 text-primary" />
                     {label}
                   </p>
                   <p className="text-lg font-bold text-foreground mt-0.5">{count}</p>
@@ -403,7 +402,10 @@ export function ProjectTracker() {
             <p className="text-lg font-bold text-foreground mt-0.5">{totalItemCount}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Overbudget</p>
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+              Overbudget
+            </p>
             <p className={`text-lg font-bold mt-0.5 ${overspendCount > 0 ? "text-destructive" : "text-success"}`}>
               {overspendCount}
             </p>
