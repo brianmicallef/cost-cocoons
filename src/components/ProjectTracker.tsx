@@ -240,16 +240,13 @@ export function ProjectTracker() {
   // Flatten all items for summary calculations
   const allItems = project.categories.flatMap((c) => c.items);
 
-  const spendToDate = allItems.reduce(
-    (s, i) => s + i.payments.reduce((ps, p) => ps + p.amount, 0), 0
-  );
-  const quotedSpend = allItems
-    .filter((i) => i.status === 'quote' || i.status === 'started')
-    .reduce((s, i) => s + i.predictedCost, 0);
-  const unquotedSpend = allItems
-    .filter((i) => i.status === 'idea' || i.status === 'done')
-    .reduce((s, i) => s + i.predictedCost, 0);
-  const totalSpend = quotedSpend + unquotedSpend + totalContingency;
+  const sumByStatus = (status: ItemStatus) =>
+    allItems.filter((i) => i.status === status).reduce((s, i) => s + i.predictedCost, 0);
+  const unquotedSpend = sumByStatus('idea');
+  const quotedSpend = sumByStatus('quote');
+  const startedSpend = sumByStatus('started');
+  const completedSpend = sumByStatus('done');
+  const totalSpend = unquotedSpend + quotedSpend + startedSpend + completedSpend + totalContingency;
   const overspend = allItems.reduce((s, i) => {
     const itemSpent = i.payments.reduce((ps, p) => ps + p.amount, 0);
     const remaining = i.predictedCost - itemSpent;
