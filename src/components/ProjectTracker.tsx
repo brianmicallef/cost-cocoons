@@ -257,7 +257,7 @@ export function ProjectTracker() {
     (s, i) => s + i.payments.reduce((ps, p) => ps + p.amount, 0),
     0
   );
-  const totalSpend = unquotedSpend + quotedSpend + startedSpend + completedSpend + totalContingency;
+  const totalSpend = unquotedSpend + quotedSpend + startedSpend + spendToDate + totalContingency;
   const overspend = allItems.reduce((s, i) => {
     const itemSpent = i.payments.reduce((ps, p) => ps + p.amount, 0);
     const remaining = i.predictedCost - itemSpent;
@@ -346,7 +346,7 @@ export function ProjectTracker() {
             { label: 'Unquoted', value: unquotedSpend, Icon: Lightbulb },
             { label: 'Quoted', value: quotedSpend, Icon: FileText },
             { label: 'Started', value: startedSpend, Icon: Hammer },
-            { label: 'Completed', value: completedSpend, Icon: CheckCircle2 },
+            { label: 'Spend to Date', value: spendToDate, Icon: CheckCircle2 },
           ]).map(({ label, value, Icon }) => (
             <div key={label} className="rounded-xl border border-border bg-card p-5">
               <p className="text-sm text-muted-foreground flex items-center gap-1.5">
