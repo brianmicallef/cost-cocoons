@@ -35,6 +35,7 @@ export function MoodboardPage() {
 
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
+  const [tagline] = useState(() => TAGLINES[Math.floor(Math.random() * TAGLINES.length)]);
 
   const boards = project.moodboard?.boards || [];
 
