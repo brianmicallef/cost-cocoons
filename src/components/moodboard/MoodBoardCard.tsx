@@ -48,17 +48,17 @@ export function MoodBoardCard({
   };
 
   return (
-    <div className="rounded-xl border border-border bg-card">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+    <div className="rounded-xl">
+      <div className="flex items-center gap-2 py-1.5">
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="p-1 -ml-1 rounded hover:bg-accent text-muted-foreground"
+          className="p-0.5 -ml-0.5 rounded hover:bg-accent text-muted-foreground"
           aria-label={expanded ? "Collapse" : "Expand"}
         >
-          {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          {expanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
         </button>
         <span
-          className="inline-block h-3 w-3 rounded-full shrink-0"
+          className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
           style={{ backgroundColor: board.color }}
           title={board.name}
         />
@@ -75,31 +75,31 @@ export function MoodBoardCard({
               }
             }}
             autoFocus
-            className="h-8 max-w-xs"
+            className="h-7 max-w-xs text-sm"
           />
         ) : (
           <button
-            className="text-base font-semibold text-foreground hover:underline"
+            className="text-sm font-semibold text-foreground hover:underline"
             onClick={() => setEditingName(true)}
           >
             {board.name}
           </button>
         )}
-        <span className="text-xs text-muted-foreground ml-1">
-          {board.items.length} {board.items.length === 1 ? "item" : "items"}
+        <span className="text-xs text-muted-foreground">
+          {board.items.length}
         </span>
-        <div className="ml-auto flex items-center gap-1">
-          <Button size="sm" variant="ghost" onClick={() => setAddOpen(true)}>
-            <PlusCircle className="h-4 w-4 mr-1.5" /> Add item
+        <div className="ml-auto flex items-center gap-0.5 opacity-60 hover:opacity-100 transition-opacity">
+          <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setAddOpen(true)}>
+            <PlusCircle className="h-3.5 w-3.5 mr-1" /> Add
           </Button>
           <Button
             size="icon"
             variant="ghost"
             onClick={() => setEditingName(true)}
-            className="h-8 w-8 text-muted-foreground"
+            className="h-7 w-7 text-muted-foreground"
             title="Rename board"
           >
-            <Pencil className="h-3.5 w-3.5" />
+            <Pencil className="h-3 w-3" />
           </Button>
           <Button
             size="icon"
@@ -112,19 +112,19 @@ export function MoodBoardCard({
                 onDelete();
               }
             }}
-            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+            className="h-7 w-7 text-muted-foreground hover:text-destructive"
             title="Delete board"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-3 w-3" />
           </Button>
         </div>
       </div>
 
       {expanded && (
-        <div className="p-4">
+        <div className="pb-2">
           {board.items.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No items yet. Click <span className="font-medium">Add item</span> to paste a product link.
+            <p className="text-xs text-muted-foreground py-3">
+              No items yet. Click <span className="font-medium">Add</span> to paste a product link.
             </p>
           ) : (
             <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 [column-fill:_balance]">
