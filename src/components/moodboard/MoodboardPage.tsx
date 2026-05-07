@@ -4,7 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopNav } from "@/components/TopNav";
-import { House, Plus, Image as ImageIcon, Upload, Download } from "lucide-react";
+import { House, Plus, Image as ImageIcon, Upload, Download, Sparkles } from "lucide-react";
+
+const TAGLINES = [
+  "Curate your dream space",
+  "Every great room starts with an idea",
+  "Collect. Compose. Create.",
+  "Inspiration, beautifully organised",
+  "Where ideas become rooms",
+];
 import { MoodBoardCard } from "./MoodBoardCard";
 import { CsvUploadDialog } from "@/components/CsvUploadDialog";
 
