@@ -127,17 +127,18 @@ export function MoodBoardCard({
               No items yet. Click <span className="font-medium">Add item</span> to paste a product link.
             </p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 [column-fill:_balance]">
               {board.items.map((item) => (
-                <MoodItemCard
-                  key={item.id}
-                  item={item}
-                  onEdit={() => setEditing(item)}
-                  onDelete={() => {
-                    if (confirm(`Delete "${item.title}"?`)) onDeleteItem(item.id);
-                  }}
-                  onPromote={() => setPromoting(item)}
-                />
+                <div key={item.id} className="mb-3 break-inside-avoid">
+                  <MoodItemCard
+                    item={item}
+                    onEdit={() => setEditing(item)}
+                    onDelete={() => {
+                      if (confirm(`Delete "${item.title}"?`)) onDeleteItem(item.id);
+                    }}
+                    onPromote={() => setPromoting(item)}
+                  />
+                </div>
               ))}
             </div>
           )}
