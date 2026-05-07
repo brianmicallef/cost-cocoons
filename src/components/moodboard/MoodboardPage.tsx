@@ -83,23 +83,26 @@ export function MoodboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card sticky top-0 z-10">
+      <header className="border-b border-border/40 bg-gradient-to-r from-accent/10 via-background to-accent/5 backdrop-blur-md sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center">
+          <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center shadow-lg shadow-accent/20 ring-1 ring-accent/30">
             <ImageIcon className="h-5 w-5 text-accent-foreground" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-foreground truncate">{project.name}</h1>
-            <p className="text-sm text-muted-foreground">Moodboard</p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent flex items-center gap-1.5 truncate">
+              {project.name}
+              <Sparkles className="h-4 w-4 text-accent shrink-0" />
+            </h1>
+            <p className="text-sm text-muted-foreground italic">{tagline}</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
             <TopNav />
             <ThemeToggle />
-            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
-              <Upload className="h-4 w-4 mr-1.5" /> Import
+            <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setImportOpen(true)}>
+              <Upload className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Import</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-1.5" /> Export
+            <Button variant="ghost" size="sm" className="rounded-full" onClick={handleExport}>
+              <Download className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Export</span>
             </Button>
           </div>
         </div>
