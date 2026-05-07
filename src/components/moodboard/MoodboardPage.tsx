@@ -145,7 +145,7 @@ export function MoodboardPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-1">
             {boards.map((board) => (
               <MoodBoardCard
                 key={board.id}
