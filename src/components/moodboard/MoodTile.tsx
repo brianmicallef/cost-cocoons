@@ -9,6 +9,8 @@ import {
   ArrowRightToLine,
   Check,
   X,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 
 const fmt = (n: number) =>
@@ -36,6 +38,7 @@ interface MoodTileProps {
   onEdit: () => void;
   onDelete: () => void;
   onPromote: () => void;
+  onSetReaction: (reaction: 'up' | 'down' | undefined) => void;
 }
 
 export function MoodTile({
@@ -46,6 +49,7 @@ export function MoodTile({
   onEdit,
   onDelete,
   onPromote,
+  onSetReaction,
 }: MoodTileProps) {
   const [imgError, setImgError] = useState(false);
   const host = hostOf(item.url);
@@ -53,10 +57,17 @@ export function MoodTile({
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
 
+  const reactionRing =
+    item.reaction === 'up'
+      ? 'ring-2 ring-success/60'
+      : item.reaction === 'down'
+      ? 'ring-2 ring-warning/60'
+      : '';
+
   return (
     <div
       className={`group relative rounded-2xl overflow-hidden bg-muted shadow-sm hover:shadow-xl transition-all duration-200 cursor-pointer ${
-        expanded ? "ring-2 ring-accent shadow-xl" : "hover:-translate-y-0.5"
+        expanded ? 'ring-2 ring-accent shadow-xl' : `${reactionRing} hover:-translate-y-0.5`
       }`}
       onClick={onToggleExpand}
     >
@@ -82,6 +93,39 @@ export function MoodTile({
       >
         <span className="h-2 w-2 rounded-full" style={{ backgroundColor: board.color }} />
         <span className="truncate max-w-[120px]">{board.name}</span>
+      </div>
+
+      {/* Reaction buttons — always visible if set, on hover otherwise */}
+      <div
+        className={`absolute bottom-2 right-2 flex items-center gap-1 transition-opacity ${
+          item.reaction || expanded ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+        }`}
+        onClick={stop}
+      >
+        <button
+          type="button"
+          onClick={(e) => { stop(e); onSetReaction(item.reaction === 'up' ? undefined : 'up'); }}
+          title={item.reaction === 'up' ? 'Remove thumbs up' : 'Thumbs up'}
+          className={`h-7 w-7 rounded-full backdrop-blur-sm flex items-center justify-center shadow-sm transition-colors ${
+            item.reaction === 'up'
+              ? 'bg-success text-success-foreground'
+              : 'bg-background/90 text-foreground hover:bg-success hover:text-success-foreground'
+          }`}
+        >
+          <ThumbsUp className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { stop(e); onSetReaction(item.reaction === 'down' ? undefined : 'down'); }}
+          title={item.reaction === 'down' ? 'Remove thumbs down' : 'Thumbs down'}
+          className={`h-7 w-7 rounded-full backdrop-blur-sm flex items-center justify-center shadow-sm transition-colors ${
+            item.reaction === 'down'
+              ? 'bg-warning text-warning-foreground'
+              : 'bg-background/90 text-foreground hover:bg-warning hover:text-warning-foreground'
+          }`}
+        >
+          <ThumbsDown className="h-3.5 w-3.5" />
+        </button>
       </div>
 
       {item.linkedCostItemId && (
