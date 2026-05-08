@@ -10,24 +10,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2, Wand2 } from "lucide-react";
-import type { MoodItem } from "@/types/project";
+import type { MoodBoard, MoodItem } from "@/types/project";
 
 interface AddMoodItemDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  boardName: string;
+  boards: MoodBoard[];
+  defaultBoardId?: string;
   initial?: MoodItem;
-  onSubmit: (item: Omit<MoodItem, "id" | "createdAt">) => void;
+  initialBoardId?: string;
+  onSubmit: (boardId: string, item: Omit<MoodItem, "id" | "createdAt">) => void;
 }
 
 export function AddMoodItemDialog({
   open,
   onOpenChange,
-  boardName,
+  boards,
+  defaultBoardId,
   initial,
+  initialBoardId,
   onSubmit,
 }: AddMoodItemDialogProps) {
+  const [boardId, setBoardId] = useState<string>("");
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -39,6 +51,7 @@ export function AddMoodItemDialog({
 
   useEffect(() => {
     if (open) {
+      setBoardId(initialBoardId || defaultBoardId || boards[0]?.id || "");
       setUrl(initial?.url ?? "");
       setTitle(initial?.title ?? "");
       setImageUrl(initial?.imageUrl ?? "");
@@ -47,7 +60,7 @@ export function AddMoodItemDialog({
       setTags((initial?.tags || []).join(", "));
       setFetchError(null);
     }
-  }, [open, initial]);
+  }, [open, initial, initialBoardId, defaultBoardId, boards]);
 
   const handleFetch = async () => {
     if (!url.trim()) return;
@@ -68,9 +81,10 @@ export function AddMoodItemDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!boardId) return;
     if (!title.trim() && !url.trim() && !imageUrl.trim()) return;
     const parsedPrice = price.trim() === "" ? undefined : Number(price);
-    onSubmit({
+    onSubmit(boardId, {
       title: title.trim() || (url.trim() ? new URL(url.trim()).hostname : "Untitled"),
       url: url.trim() || undefined,
       imageUrl: imageUrl.trim() || undefined,
@@ -89,11 +103,31 @@ export function AddMoodItemDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            {initial ? "Edit item" : "Add item"} — {boardName}
-          </DialogTitle>
+          <DialogTitle>{initial ? "Edit item" : "Add item"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="mb-board">Category</Label>
+            <Select value={boardId} onValueChange={setBoardId}>
+              <SelectTrigger id="mb-board">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {boards.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ backgroundColor: b.color }}
+                      />
+                      {b.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="mb-url">Product URL</Label>
             <div className="flex gap-2">
@@ -192,7 +226,9 @@ export function AddMoodItemDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">{initial ? "Save" : "Add item"}</Button>
+            <Button type="submit" disabled={!boardId}>
+              {initial ? "Save" : "Add item"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
