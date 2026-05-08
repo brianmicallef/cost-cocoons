@@ -38,6 +38,7 @@ interface MoodTileProps {
   onEdit: () => void;
   onDelete: () => void;
   onPromote: () => void;
+  onSetReaction: (reaction: 'up' | 'down' | undefined) => void;
 }
 
 export function MoodTile({
@@ -48,6 +49,7 @@ export function MoodTile({
   onEdit,
   onDelete,
   onPromote,
+  onSetReaction,
 }: MoodTileProps) {
   const [imgError, setImgError] = useState(false);
   const host = hostOf(item.url);
