@@ -351,6 +351,7 @@ export function MoodboardPage() {
                       if (confirm(`Delete "${item.title}"?`)) deleteMoodItem(boardId, item.id);
                     }}
                     onPromote={() => setPromoting({ item, boardId })}
+                    onSetReaction={(reaction) => updateMoodItem(boardId, item.id, { reaction })}
                   />
                 </div>
               );
