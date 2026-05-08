@@ -57,10 +57,17 @@ export function MoodTile({
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
 
+  const reactionRing =
+    item.reaction === 'up'
+      ? 'ring-2 ring-success/60'
+      : item.reaction === 'down'
+      ? 'ring-2 ring-warning/60'
+      : '';
+
   return (
     <div
       className={`group relative rounded-2xl overflow-hidden bg-muted shadow-sm hover:shadow-xl transition-all duration-200 cursor-pointer ${
-        expanded ? "ring-2 ring-accent shadow-xl" : "hover:-translate-y-0.5"
+        expanded ? 'ring-2 ring-accent shadow-xl' : `${reactionRing} hover:-translate-y-0.5`
       }`}
       onClick={onToggleExpand}
     >
