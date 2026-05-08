@@ -95,6 +95,39 @@ export function MoodTile({
         <span className="truncate max-w-[120px]">{board.name}</span>
       </div>
 
+      {/* Reaction buttons — always visible if set, on hover otherwise */}
+      <div
+        className={`absolute bottom-2 right-2 flex items-center gap-1 transition-opacity ${
+          item.reaction || expanded ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+        }`}
+        onClick={stop}
+      >
+        <button
+          type="button"
+          onClick={(e) => { stop(e); onSetReaction(item.reaction === 'up' ? undefined : 'up'); }}
+          title={item.reaction === 'up' ? 'Remove thumbs up' : 'Thumbs up'}
+          className={`h-7 w-7 rounded-full backdrop-blur-sm flex items-center justify-center shadow-sm transition-colors ${
+            item.reaction === 'up'
+              ? 'bg-success text-success-foreground'
+              : 'bg-background/90 text-foreground hover:bg-success hover:text-success-foreground'
+          }`}
+        >
+          <ThumbsUp className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { stop(e); onSetReaction(item.reaction === 'down' ? undefined : 'down'); }}
+          title={item.reaction === 'down' ? 'Remove thumbs down' : 'Thumbs down'}
+          className={`h-7 w-7 rounded-full backdrop-blur-sm flex items-center justify-center shadow-sm transition-colors ${
+            item.reaction === 'down'
+              ? 'bg-warning text-warning-foreground'
+              : 'bg-background/90 text-foreground hover:bg-warning hover:text-warning-foreground'
+          }`}
+        >
+          <ThumbsDown className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
       {item.linkedCostItemId && (
         <div
           className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-success/90 text-success-foreground text-[10px] font-medium px-2 py-0.5 backdrop-blur-sm"
