@@ -9,6 +9,8 @@ import {
   ArrowRightToLine,
   Check,
   X,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 
 const fmt = (n: number) =>
