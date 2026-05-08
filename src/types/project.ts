@@ -49,6 +49,7 @@ export interface MoodItem {
   tags?: string[];
   createdAt: string;
   linkedCostItemId?: string;
+  reaction?: 'up' | 'down';
 }
 
 export interface MoodBoard {
