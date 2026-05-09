@@ -12,6 +12,7 @@ import {
   ThumbsUp,
   ThumbsDown,
 } from "lucide-react";
+import { useCurrentUser } from "@/contexts/UserContext";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-GB", {
@@ -38,7 +39,8 @@ interface MoodTileProps {
   onEdit: () => void;
   onDelete: () => void;
   onPromote: () => void;
-  onSetReaction: (reaction: 'up' | 'down' | undefined) => void;
+  onUnpromote: () => void;
+  onVote: (type: "up" | "down") => void;
 }
 
 export function MoodTile({
@@ -49,25 +51,34 @@ export function MoodTile({
   onEdit,
   onDelete,
   onPromote,
-  onSetReaction,
+  onUnpromote,
+  onVote,
 }: MoodTileProps) {
   const [imgError, setImgError] = useState(false);
+  const currentUser = useCurrentUser();
   const host = hostOf(item.url);
   const hasImage = item.imageUrl && !imgError;
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
 
+  const votes = item.votes || [];
+  const upVoters = votes.filter((v) => v.type === "up").map((v) => v.user);
+  const downVoters = votes.filter((v) => v.type === "down").map((v) => v.user);
+  const myVote = votes.find((v) => v.user === currentUser)?.type;
+
   const reactionRing =
-    item.reaction === 'up'
-      ? 'ring-2 ring-success/60'
-      : item.reaction === 'down'
-      ? 'ring-2 ring-warning/60'
-      : '';
+    upVoters.length > 0 && downVoters.length === 0
+      ? "ring-2 ring-success/60"
+      : downVoters.length > 0 && upVoters.length === 0
+      ? "ring-2 ring-warning/60"
+      : upVoters.length > 0 && downVoters.length > 0
+      ? "ring-2 ring-muted-foreground/40"
+      : "";
 
   return (
     <div
       className={`group relative rounded-2xl overflow-hidden bg-muted shadow-sm hover:shadow-xl transition-all duration-200 cursor-pointer ${
-        expanded ? 'ring-2 ring-accent shadow-xl' : `${reactionRing} hover:-translate-y-0.5`
+        expanded ? "ring-2 ring-accent shadow-xl" : `${reactionRing} hover:-translate-y-0.5`
       }`}
       onClick={onToggleExpand}
     >
@@ -86,7 +97,7 @@ export function MoodTile({
         </div>
       )}
 
-      {/* Category badge — visible on hover */}
+      {/* Category badge */}
       <div
         className="absolute top-2 left-2 flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur-sm text-foreground text-[10px] font-medium pl-1.5 pr-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
         title={board.name}
@@ -95,46 +106,77 @@ export function MoodTile({
         <span className="truncate max-w-[120px]">{board.name}</span>
       </div>
 
-      {/* Reaction buttons — always visible if set, on hover otherwise */}
+      {/* Voting buttons + counts */}
       <div
         className={`absolute bottom-2 right-2 flex items-center gap-1 transition-opacity ${
-          item.reaction || expanded ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          votes.length > 0 || expanded ? "opacity-100" : "opacity-0 group-hover:opacity-100"
         }`}
         onClick={stop}
       >
         <button
           type="button"
-          onClick={(e) => { stop(e); onSetReaction(item.reaction === 'up' ? undefined : 'up'); }}
-          title={item.reaction === 'up' ? 'Remove thumbs up' : 'Thumbs up'}
-          className={`h-7 w-7 rounded-full backdrop-blur-sm flex items-center justify-center shadow-sm transition-colors ${
-            item.reaction === 'up'
-              ? 'bg-success text-success-foreground'
-              : 'bg-background/90 text-foreground hover:bg-success hover:text-success-foreground'
+          onClick={(e) => {
+            stop(e);
+            onVote("up");
+          }}
+          title={
+            upVoters.length > 0
+              ? `Liked by ${upVoters.join(", ")}`
+              : myVote === "up"
+              ? "Remove your thumbs up"
+              : "Thumbs up"
+          }
+          className={`h-7 rounded-full backdrop-blur-sm flex items-center gap-1 px-2 shadow-sm transition-colors ${
+            myVote === "up"
+              ? "bg-success text-success-foreground"
+              : upVoters.length > 0
+              ? "bg-success/80 text-success-foreground"
+              : "bg-background/90 text-foreground hover:bg-success hover:text-success-foreground"
           }`}
         >
           <ThumbsUp className="h-3.5 w-3.5" />
+          {upVoters.length > 0 && <span className="text-[11px] font-semibold">{upVoters.length}</span>}
         </button>
         <button
           type="button"
-          onClick={(e) => { stop(e); onSetReaction(item.reaction === 'down' ? undefined : 'down'); }}
-          title={item.reaction === 'down' ? 'Remove thumbs down' : 'Thumbs down'}
-          className={`h-7 w-7 rounded-full backdrop-blur-sm flex items-center justify-center shadow-sm transition-colors ${
-            item.reaction === 'down'
-              ? 'bg-warning text-warning-foreground'
-              : 'bg-background/90 text-foreground hover:bg-warning hover:text-warning-foreground'
+          onClick={(e) => {
+            stop(e);
+            onVote("down");
+          }}
+          title={
+            downVoters.length > 0
+              ? `Disliked by ${downVoters.join(", ")}`
+              : myVote === "down"
+              ? "Remove your thumbs down"
+              : "Thumbs down"
+          }
+          className={`h-7 rounded-full backdrop-blur-sm flex items-center gap-1 px-2 shadow-sm transition-colors ${
+            myVote === "down"
+              ? "bg-warning text-warning-foreground"
+              : downVoters.length > 0
+              ? "bg-warning/80 text-warning-foreground"
+              : "bg-background/90 text-foreground hover:bg-warning hover:text-warning-foreground"
           }`}
         >
           <ThumbsDown className="h-3.5 w-3.5" />
+          {downVoters.length > 0 && (
+            <span className="text-[11px] font-semibold">{downVoters.length}</span>
+          )}
         </button>
       </div>
 
       {item.linkedCostItemId && (
-        <div
-          className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-success/90 text-success-foreground text-[10px] font-medium px-2 py-0.5 backdrop-blur-sm"
-          title="In Cost Tracker"
+        <button
+          type="button"
+          onClick={(e) => {
+            stop(e);
+            if (confirm(`Remove "${item.title}" from the cost tracker?`)) onUnpromote();
+          }}
+          title="In Cost Tracker — click to untick & remove"
+          className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-success/90 hover:bg-success text-success-foreground text-[10px] font-medium px-2 py-0.5 backdrop-blur-sm transition-colors"
         >
           <Check className="h-3 w-3" /> In costs
-        </div>
+        </button>
       )}
 
       {/* Hover bottom info gradient (only when not expanded) */}
@@ -165,7 +207,10 @@ export function MoodTile({
               size="icon"
               variant="ghost"
               className="h-7 w-7 -mt-1 -mr-1 shrink-0"
-              onClick={(e) => { stop(e); onToggleExpand(); }}
+              onClick={(e) => {
+                stop(e);
+                onToggleExpand();
+              }}
               title="Close"
             >
               <X className="h-4 w-4" />
@@ -191,6 +236,10 @@ export function MoodTile({
                 {new Date(item.createdAt).toLocaleDateString("en-GB")}
               </div>
             </div>
+            <div>
+              <div className="text-muted-foreground">Added by</div>
+              <div className="text-foreground">{item.createdBy || "Brian"}</div>
+            </div>
             {item.linkedCostItemId && (
               <div>
                 <div className="text-muted-foreground">Status</div>
@@ -198,6 +247,25 @@ export function MoodTile({
               </div>
             )}
           </div>
+
+          {(upVoters.length > 0 || downVoters.length > 0) && (
+            <div className="text-xs space-y-1 border-t border-border pt-2">
+              {upVoters.length > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <ThumbsUp className="h-3 w-3 text-success" />
+                  <span className="text-muted-foreground">Liked by</span>
+                  <span className="text-foreground">{upVoters.join(", ")}</span>
+                </div>
+              )}
+              {downVoters.length > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <ThumbsDown className="h-3 w-3 text-warning" />
+                  <span className="text-muted-foreground">Disliked by</span>
+                  <span className="text-foreground">{downVoters.join(", ")}</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {item.notes && (
             <div className="text-xs">
@@ -209,7 +277,10 @@ export function MoodTile({
           {item.tags && item.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {item.tags.map((t) => (
-                <span key={t} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                <span
+                  key={t}
+                  className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground"
+                >
                   #{t}
                 </span>
               ))}
@@ -224,12 +295,27 @@ export function MoodTile({
                 </a>
               </Button>
             )}
-            {!item.linkedCostItemId && (
+            {item.linkedCostItemId ? (
               <Button
                 size="sm"
                 variant="outline"
                 className="h-7 text-xs"
-                onClick={(e) => { stop(e); onPromote(); }}
+                onClick={(e) => {
+                  stop(e);
+                  if (confirm(`Remove "${item.title}" from the cost tracker?`)) onUnpromote();
+                }}
+              >
+                <X className="h-3.5 w-3.5 mr-1" /> Remove from costs
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                onClick={(e) => {
+                  stop(e);
+                  onPromote();
+                }}
               >
                 <ArrowRightToLine className="h-3.5 w-3.5 mr-1" /> Add to costs
               </Button>
@@ -238,7 +324,10 @@ export function MoodTile({
               size="sm"
               variant="ghost"
               className="h-7 text-xs"
-              onClick={(e) => { stop(e); onEdit(); }}
+              onClick={(e) => {
+                stop(e);
+                onEdit();
+              }}
             >
               <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
             </Button>
@@ -246,7 +335,10 @@ export function MoodTile({
               size="sm"
               variant="ghost"
               className="h-7 text-xs text-muted-foreground hover:text-destructive"
-              onClick={(e) => { stop(e); onDelete(); }}
+              onClick={(e) => {
+                stop(e);
+                onDelete();
+              }}
             >
               <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
             </Button>
