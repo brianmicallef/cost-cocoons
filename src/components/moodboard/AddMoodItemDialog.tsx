@@ -95,6 +95,8 @@ export function AddMoodItemDialog({
         .map((t) => t.trim())
         .filter(Boolean),
       linkedCostItemId: initial?.linkedCostItemId,
+      votes: initial?.votes,
+      createdBy: initial?.createdBy,
     });
     onOpenChange(false);
   };
