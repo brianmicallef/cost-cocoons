@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopNav } from "@/components/TopNav";
+import { UserMenu } from "@/components/UserMenu";
 import {
   House,
   Plus,
@@ -15,11 +16,13 @@ import {
   Trash2,
   Check,
   X,
+  Users,
 } from "lucide-react";
 import { MoodTile } from "./MoodTile";
 import { AddMoodItemDialog } from "./AddMoodItemDialog";
 import { PromoteToCostDialog } from "./PromoteToCostDialog";
 import { CsvUploadDialog } from "@/components/CsvUploadDialog";
+import { ACCOUNTS } from "@/contexts/UserContext";
 import type { MoodBoard, MoodItem } from "@/types/project";
 
 const TAGLINES = [
@@ -33,6 +36,7 @@ const TAGLINES = [
 export function MoodboardPage() {
   const {
     project,
+    rawProject,
     loading,
     addBoard,
     renameBoard,
@@ -41,6 +45,8 @@ export function MoodboardPage() {
     updateMoodItem,
     deleteMoodItem,
     promoteMoodItemToCost,
+    unpromoteMoodItem,
+    voteMoodItem,
     bulkImport,
     fullImport,
   } = useProject();
@@ -57,6 +63,7 @@ export function MoodboardPage() {
   const [renameValue, setRenameValue] = useState("");
   const [tagline] = useState(() => TAGLINES[Math.floor(Math.random() * TAGLINES.length)]);
   const [activeBoardIds, setActiveBoardIds] = useState<Set<string>>(new Set());
+  const [activeUsers, setActiveUsers] = useState<Set<string>>(new Set());
 
   const boards = project.moodboard?.boards || [];
   const boardById = useMemo(() => {
@@ -65,16 +72,20 @@ export function MoodboardPage() {
     return m;
   }, [boards]);
 
-  const showAll = activeBoardIds.size === 0;
-  const visibleBoards = showAll ? boards : boards.filter((b) => activeBoardIds.has(b.id));
+  const showAllBoards = activeBoardIds.size === 0;
+  const showAllUsers = activeUsers.size === 0;
+  const visibleBoards = showAllBoards ? boards : boards.filter((b) => activeBoardIds.has(b.id));
 
   const allItems = useMemo(() => {
     const items: { item: MoodItem; boardId: string }[] = [];
     visibleBoards.forEach((b) => {
-      b.items.forEach((i) => items.push({ item: i, boardId: b.id }));
+      b.items.forEach((i) => {
+        if (!showAllUsers && !activeUsers.has(i.createdBy || "Brian")) return;
+        items.push({ item: i, boardId: b.id });
+      });
     });
     return items;
-  }, [visibleBoards]);
+  }, [visibleBoards, showAllUsers, activeUsers]);
 
   const toggleBoard = (id: string) => {
     setActiveBoardIds((prev) => {
@@ -84,6 +95,27 @@ export function MoodboardPage() {
       return next;
     });
   };
+
+  const toggleUser = (u: string) => {
+    setActiveUsers((prev) => {
+      const next = new Set(prev);
+      if (next.has(u)) next.delete(u);
+      else next.add(u);
+      return next;
+    });
+  };
+
+  // Per-user item counts (across visible boards)
+  const userCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    visibleBoards.forEach((b) =>
+      b.items.forEach((i) => {
+        const u = i.createdBy || "Brian";
+        counts[u] = (counts[u] || 0) + 1;
+      })
+    );
+    return counts;
+  }, [visibleBoards]);
 
   const handleAddBoard = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,13 +127,13 @@ export function MoodboardPage() {
 
   const handleExport = () => {
     const exportData = {
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       project: {
-        name: project.name,
-        categories: project.categories,
-        reminders: project.reminders || [],
-        moodboard: project.moodboard || { boards: [] },
+        name: rawProject.name,
+        categories: rawProject.categories,
+        reminders: rawProject.reminders || [],
+        moodboard: rawProject.moodboard || { boards: [] },
       },
     };
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
@@ -150,17 +182,18 @@ export function MoodboardPage() {
             <Button variant="ghost" size="sm" className="rounded-full" onClick={handleExport}>
               <Download className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Export</span>
             </Button>
+            <UserMenu />
           </div>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-5 space-y-4">
-        {/* Filter / category bar */}
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-5 space-y-3">
+        {/* Category filter bar */}
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setActiveBoardIds(new Set())}
             className={`text-xs font-medium rounded-full px-3 py-1.5 border transition-colors ${
-              showAll
+              showAllBoards
                 ? "bg-foreground text-background border-foreground"
                 : "bg-background text-muted-foreground border-border hover:text-foreground"
             }`}
@@ -212,10 +245,7 @@ export function MoodboardPage() {
                 }`}
               >
                 <button onClick={() => toggleBoard(b.id)} className="flex items-center gap-1.5">
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: b.color }}
-                  />
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: b.color }} />
                   <span>{b.name}</span>
                   <span className="opacity-60">{b.items.length}</span>
                 </button>
@@ -318,6 +348,42 @@ export function MoodboardPage() {
           </div>
         </div>
 
+        {/* User filter bar */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Users className="h-3.5 w-3.5" /> Added by
+          </div>
+          <button
+            onClick={() => setActiveUsers(new Set())}
+            className={`text-xs font-medium rounded-full px-3 py-1 border transition-colors ${
+              showAllUsers
+                ? "bg-foreground text-background border-foreground"
+                : "bg-background text-muted-foreground border-border hover:text-foreground"
+            }`}
+          >
+            Anyone
+          </button>
+          {ACCOUNTS.map((u) => {
+            const active = activeUsers.has(u);
+            const count = userCounts[u] || 0;
+            return (
+              <button
+                key={u}
+                onClick={() => toggleUser(u)}
+                className={`text-xs font-medium rounded-full px-3 py-1 border transition-colors ${
+                  active
+                    ? "bg-foreground text-background border-foreground"
+                    : count === 0
+                    ? "bg-background text-muted-foreground/60 border-border opacity-60"
+                    : "bg-background text-foreground border-border hover:bg-muted"
+                }`}
+              >
+                {u} <span className="opacity-60 ml-1">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* Wall */}
         {boards.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
@@ -330,7 +396,7 @@ export function MoodboardPage() {
           <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
             <ImageIcon className="h-8 w-8 mx-auto mb-3 opacity-40" />
             <p className="text-sm">
-              No items yet. Click <span className="font-medium">Add item</span> to paste a product link.
+              No items match the current filters.
             </p>
           </div>
         ) : (
@@ -351,7 +417,8 @@ export function MoodboardPage() {
                       if (confirm(`Delete "${item.title}"?`)) deleteMoodItem(boardId, item.id);
                     }}
                     onPromote={() => setPromoting({ item, boardId })}
-                    onSetReaction={(reaction) => updateMoodItem(boardId, item.id, { reaction })}
+                    onUnpromote={() => unpromoteMoodItem(boardId, item.id)}
+                    onVote={(type) => voteMoodItem(boardId, item.id, type)}
                   />
                 </div>
               );
@@ -378,7 +445,6 @@ export function MoodboardPage() {
         onSubmit={(boardId, updates) => {
           if (!editing) return;
           if (boardId !== editing.boardId) {
-            // move: delete from old, add to new (preserve linkedCostItemId)
             deleteMoodItem(editing.boardId, editing.item.id);
             addMoodItem(boardId, updates);
           } else {

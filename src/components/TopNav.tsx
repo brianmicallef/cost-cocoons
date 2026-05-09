@@ -13,11 +13,11 @@ export function TopNav() {
 
   return (
     <nav className="flex items-center gap-1">
-      <NavLink to="/" end className={linkClass}>
-        <House className="h-4 w-4" /> Cost Tracker
-      </NavLink>
       <NavLink to="/moodboard" className={linkClass}>
         <ImageIcon className="h-4 w-4" /> Moodboard
+      </NavLink>
+      <NavLink to="/cost-tracker" className={linkClass}>
+        <House className="h-4 w-4" /> Cost Tracker
       </NavLink>
     </nav>
   );

@@ -6,6 +6,7 @@ import { RemindersSection } from "./RemindersSection";
 import { CsvUploadDialog } from "./CsvUploadDialog";
 import { ThemeToggle } from "./ThemeToggle";
 import { TopNav } from "./TopNav";
+import { UserMenu } from "./UserMenu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { House, Plus, AlertTriangle, Upload, Download, ChevronsDownUp, ChevronsUpDown, ChevronRight, ChevronDown, Lightbulb, FileText, Hammer, CheckCircle2, Sparkles } from "lucide-react";
@@ -50,6 +51,7 @@ const fmt = (n: number) =>
 export function ProjectTracker() {
   const {
     project,
+    rawProject,
     loading,
     addCategory,
     bulkImport,
@@ -278,13 +280,13 @@ export function ProjectTracker() {
   // JSON Export (full fidelity)
   const handleExport = () => {
     const exportData = {
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       project: {
-        name: project.name,
-        categories: project.categories,
-        reminders: project.reminders || [],
-        moodboard: project.moodboard || { boards: [] },
+        name: rawProject.name,
+        categories: rawProject.categories,
+        reminders: rawProject.reminders || [],
+        moodboard: rawProject.moodboard || { boards: [] },
       },
     };
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
@@ -338,6 +340,7 @@ export function ProjectTracker() {
             <Button variant="ghost" size="sm" className="rounded-full" onClick={handleExport}>
               <Download className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Export</span>
             </Button>
+            <UserMenu />
           </div>
         </div>
       </header>

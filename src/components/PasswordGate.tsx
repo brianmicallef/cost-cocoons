@@ -1,25 +1,30 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { House, Lock } from "lucide-react";
-
-const PASSCODE = "ABCE12";
+import { ACCOUNTS, AccountName, useUser } from "@/contexts/UserContext";
 
 export function PasswordGate({ children }: { children: React.ReactNode }) {
-  const [authenticated, setAuthenticated] = useState(
-    () => sessionStorage.getItem("rl_auth") === "true"
-  );
+  const { authenticated, login } = useUser();
+  const [selected, setSelected] = useState<string>("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === PASSCODE) {
-      sessionStorage.setItem("rl_auth", "true");
-      setAuthenticated(true);
-    } else {
-      setError(true);
+    if (!selected) {
+      setError("Please select who you are");
+      return;
     }
+    const ok = login(selected as AccountName, password);
+    if (!ok) setError("Incorrect password");
   };
 
   if (authenticated) return <>{children}</>;
@@ -33,18 +38,33 @@ export function PasswordGate({ children }: { children: React.ReactNode }) {
           </div>
           <h2 className="text-lg font-bold text-foreground">Roebuck Lane</h2>
           <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-            <Lock className="h-3.5 w-3.5" /> Enter password to continue
+            <Lock className="h-3.5 w-3.5" /> Sign in to continue
           </p>
         </div>
-        <Input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => { setPassword(e.target.value); setError(false); }}
-          autoFocus
-        />
-        {error && <p className="text-sm text-destructive">Incorrect password</p>}
-        <Button type="submit" className="w-full">Enter</Button>
+        <div className="space-y-1.5">
+          <label className="text-xs text-muted-foreground">Who are you?</label>
+          <Select value={selected} onValueChange={(v) => { setSelected(v); setError(null); }}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select your name" />
+            </SelectTrigger>
+            <SelectContent>
+              {ACCOUNTS.map((a) => (
+                <SelectItem key={a} value={a}>{a}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs text-muted-foreground">Password</label>
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => { setPassword(e.target.value); setError(null); }}
+          />
+        </div>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <Button type="submit" className="w-full" disabled={!selected || !password}>Enter</Button>
       </form>
     </div>
   );
