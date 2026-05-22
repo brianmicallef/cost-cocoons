@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { UserProvider } from "@/contexts/UserContext";
 import Index from "./pages/Index.tsx";
 import Moodboard from "./pages/Moodboard.tsx";
+import MoodboardGuest from "./pages/MoodboardGuest.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
             <Route path="/" element={<Navigate to="/moodboard" replace />} />
             <Route path="/cost-tracker" element={<Index />} />
             <Route path="/moodboard" element={<Moodboard />} />
+            <Route path="/moodboard/guest" element={<MoodboardGuest />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

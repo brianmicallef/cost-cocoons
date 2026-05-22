@@ -8,8 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { House, Lock } from "lucide-react";
+import { House, Lock, Eye } from "lucide-react";
 import { ACCOUNTS, AccountName, useUser } from "@/contexts/UserContext";
+import { Link } from "react-router-dom";
 
 export function PasswordGate({ children }: { children: React.ReactNode }) {
   const { authenticated, login } = useUser();
@@ -65,6 +66,13 @@ export function PasswordGate({ children }: { children: React.ReactNode }) {
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="submit" className="w-full" disabled={!selected || !password}>Enter</Button>
+        <Link
+          to="/moodboard/guest"
+          className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors pt-1"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          View moodboard as guest
+        </Link>
       </form>
     </div>
   );
