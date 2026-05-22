@@ -35,6 +35,7 @@ interface MoodTileProps {
   item: MoodItem;
   board: MoodBoard;
   expanded: boolean;
+  readOnly?: boolean;
   onToggleExpand: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -47,6 +48,7 @@ export function MoodTile({
   item,
   board,
   expanded,
+  readOnly,
   onToggleExpand,
   onEdit,
   onDelete,
@@ -107,6 +109,7 @@ export function MoodTile({
       </div>
 
       {/* Voting buttons + counts */}
+      {!readOnly && (
       <div
         className={`absolute bottom-2 right-2 flex items-center gap-1 transition-opacity ${
           votes.length > 0 || expanded ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -164,8 +167,31 @@ export function MoodTile({
           )}
         </button>
       </div>
+      )}
+      {readOnly && votes.length > 0 && (
+        <div className="absolute bottom-2 right-2 flex items-center gap-1">
+          {upVoters.length > 0 && (
+            <span
+              className="h-7 rounded-full backdrop-blur-sm flex items-center gap-1 px-2 shadow-sm bg-success/80 text-success-foreground"
+              title={`Liked by ${upVoters.join(", ")}`}
+            >
+              <ThumbsUp className="h-3.5 w-3.5" />
+              <span className="text-[11px] font-semibold">{upVoters.length}</span>
+            </span>
+          )}
+          {downVoters.length > 0 && (
+            <span
+              className="h-7 rounded-full backdrop-blur-sm flex items-center gap-1 px-2 shadow-sm bg-warning/80 text-warning-foreground"
+              title={`Disliked by ${downVoters.join(", ")}`}
+            >
+              <ThumbsDown className="h-3.5 w-3.5" />
+              <span className="text-[11px] font-semibold">{downVoters.length}</span>
+            </span>
+          )}
+        </div>
+      )}
 
-      {item.linkedCostItemId && (
+      {item.linkedCostItemId && !readOnly && (
         <button
           type="button"
           onClick={(e) => {
@@ -177,6 +203,11 @@ export function MoodTile({
         >
           <Check className="h-3 w-3" /> In costs
         </button>
+      )}
+      {item.linkedCostItemId && readOnly && (
+        <span className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-success/90 text-success-foreground text-[10px] font-medium px-2 py-0.5 backdrop-blur-sm">
+          <Check className="h-3 w-3" /> In costs
+        </span>
       )}
 
       {/* Hover bottom info gradient (only when not expanded) */}
@@ -295,53 +326,57 @@ export function MoodTile({
                 </a>
               </Button>
             )}
-            {item.linkedCostItemId ? (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs"
-                onClick={(e) => {
-                  stop(e);
-                  if (confirm(`Remove "${item.title}" from the cost tracker?`)) onUnpromote();
-                }}
-              >
-                <X className="h-3.5 w-3.5 mr-1" /> Remove from costs
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs"
-                onClick={(e) => {
-                  stop(e);
-                  onPromote();
-                }}
-              >
-                <ArrowRightToLine className="h-3.5 w-3.5 mr-1" /> Add to costs
-              </Button>
+            {!readOnly && (
+              <>
+                {item.linkedCostItemId ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    onClick={(e) => {
+                      stop(e);
+                      if (confirm(`Remove "${item.title}" from the cost tracker?`)) onUnpromote();
+                    }}
+                  >
+                    <X className="h-3.5 w-3.5 mr-1" /> Remove from costs
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    onClick={(e) => {
+                      stop(e);
+                      onPromote();
+                    }}
+                  >
+                    <ArrowRightToLine className="h-3.5 w-3.5 mr-1" /> Add to costs
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-xs"
+                  onClick={(e) => {
+                    stop(e);
+                    onEdit();
+                  }}
+                >
+                  <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                  onClick={(e) => {
+                    stop(e);
+                    onDelete();
+                  }}
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+                </Button>
+              </>
             )}
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 text-xs"
-              onClick={(e) => {
-                stop(e);
-                onEdit();
-              }}
-            >
-              <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 text-xs text-muted-foreground hover:text-destructive"
-              onClick={(e) => {
-                stop(e);
-                onDelete();
-              }}
-            >
-              <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
-            </Button>
           </div>
         </div>
       )}

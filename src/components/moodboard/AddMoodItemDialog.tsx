@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Wand2 } from "lucide-react";
+import { Loader2, Wand2, Upload } from "lucide-react";
 import type { MoodBoard, MoodItem } from "@/types/project";
 
 interface AddMoodItemDialogProps {
@@ -48,6 +48,8 @@ export function AddMoodItemDialog({
   const [tags, setTags] = useState("");
   const [fetching, setFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -59,8 +61,35 @@ export function AddMoodItemDialog({
       setPrice(initial?.price !== undefined ? String(initial.price) : "");
       setTags((initial?.tags || []).join(", "));
       setFetchError(null);
+      setUploadError(null);
     }
   }, [open, initial, initialBoardId, defaultBoardId, boards]);
+
+  const handleImageUpload = async (file: File) => {
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const res = await fetch("/.netlify/functions/upload-image", {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setUploadError(data.error || "Upload failed");
+        return;
+      }
+      setImageUrl(data.url);
+      if (!title) {
+        const name = file.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ");
+        setTitle(name);
+      }
+    } catch {
+      setUploadError("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleFetch = async () => {
     if (!url.trim()) return;
@@ -170,13 +199,42 @@ export function AddMoodItemDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="mb-image">Image URL</Label>
-            <Input
-              id="mb-image"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://..."
-            />
+            <Label htmlFor="mb-image">Image</Label>
+            <div className="flex gap-2">
+              <Input
+                id="mb-image"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="Paste URL or upload a picture…"
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                disabled={uploading}
+                onClick={() => {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.accept = "image/*";
+                  input.onchange = () => {
+                    const file = input.files?.[0];
+                    if (file) handleImageUpload(file);
+                  };
+                  input.click();
+                }}
+              >
+                {uploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-1.5" /> Upload
+                  </>
+                )}
+              </Button>
+            </div>
+            {uploadError && (
+              <p className="text-xs text-destructive">{uploadError}</p>
+            )}
             {imageUrl && (
               <img
                 src={imageUrl}

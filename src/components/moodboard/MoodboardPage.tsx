@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useProject } from "@/hooks/useProject";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +34,7 @@ const TAGLINES = [
   "Where ideas become rooms",
 ];
 
-export function MoodboardPage() {
+export function MoodboardPage({ readOnly }: { readOnly?: boolean }) {
   const {
     project,
     rawProject,
@@ -176,16 +177,33 @@ export function MoodboardPage() {
           <div className="flex items-center gap-2 flex-wrap justify-end">
             <TopNav />
             <ThemeToggle />
-            <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setImportOpen(true)}>
-              <Upload className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Import</span>
-            </Button>
-            <Button variant="ghost" size="sm" className="rounded-full" onClick={handleExport}>
-              <Download className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Export</span>
-            </Button>
-            <UserMenu />
+            {!readOnly && (
+              <>
+                <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setImportOpen(true)}>
+                  <Upload className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Import</span>
+                </Button>
+                <Button variant="ghost" size="sm" className="rounded-full" onClick={handleExport}>
+                  <Download className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Export</span>
+                </Button>
+                <UserMenu />
+              </>
+            )}
+            {readOnly && (
+              <Link to="/moodboard">
+                <Button variant="outline" size="sm" className="rounded-full">
+                  Sign in
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </header>
+
+      {readOnly && (
+        <div className="bg-muted/50 border-b border-border/40 text-center py-1.5 text-xs text-muted-foreground">
+          Viewing as guest — browse only
+        </div>
+      )}
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-5 space-y-3">
         {/* Category filter bar */}
@@ -317,7 +335,7 @@ export function MoodboardPage() {
                 <X className="h-3.5 w-3.5" />
               </Button>
             </form>
-          ) : (
+          ) : !readOnly && (
             <Button
               variant="ghost"
               size="sm"
@@ -328,6 +346,7 @@ export function MoodboardPage() {
             </Button>
           )}
 
+          {!readOnly && (
           <div className="ml-auto flex items-center gap-2">
             <Button
               variant={manageMode ? "secondary" : "ghost"}
@@ -346,9 +365,11 @@ export function MoodboardPage() {
               <Plus className="h-4 w-4 mr-1" /> Add item
             </Button>
           </div>
+          )}
         </div>
 
         {/* User filter bar */}
+        {!readOnly && (
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Users className="h-3.5 w-3.5" /> Added by
@@ -383,6 +404,7 @@ export function MoodboardPage() {
             );
           })}
         </div>
+        )}
 
         {/* Wall */}
         {boards.length === 0 ? (
@@ -409,6 +431,7 @@ export function MoodboardPage() {
                     item={item}
                     board={board}
                     expanded={expandedId === item.id}
+                    readOnly={readOnly}
                     onToggleExpand={() =>
                       setExpandedId((prev) => (prev === item.id ? null : item.id))
                     }
@@ -427,47 +450,50 @@ export function MoodboardPage() {
         )}
       </main>
 
-      <AddMoodItemDialog
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        boards={boards}
-        defaultBoardId={
-          activeBoardIds.size === 1 ? Array.from(activeBoardIds)[0] : boards[0]?.id
-        }
-        onSubmit={(boardId, item) => addMoodItem(boardId, item)}
-      />
-      <AddMoodItemDialog
-        open={editing !== null}
-        onOpenChange={(o) => !o && setEditing(null)}
-        boards={boards}
-        initial={editing?.item}
-        initialBoardId={editing?.boardId}
-        onSubmit={(boardId, updates) => {
-          if (!editing) return;
-          if (boardId !== editing.boardId) {
-            deleteMoodItem(editing.boardId, editing.item.id);
-            addMoodItem(boardId, updates);
-          } else {
-            updateMoodItem(editing.boardId, editing.item.id, updates);
-          }
-        }}
-      />
-      <PromoteToCostDialog
-        open={promoting !== null}
-        onOpenChange={(o) => !o && setPromoting(null)}
-        itemTitle={promoting?.item.title ?? ""}
-        categories={project.categories}
-        onConfirm={(categoryId) => {
-          if (promoting) promoteMoodItemToCost(promoting.boardId, promoting.item.id, categoryId);
-        }}
-      />
-
-      <CsvUploadDialog
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        onImport={bulkImport}
-        onFullImport={fullImport}
-      />
+      {!readOnly && (
+        <>
+          <AddMoodItemDialog
+            open={addOpen}
+            onOpenChange={setAddOpen}
+            boards={boards}
+            defaultBoardId={
+              activeBoardIds.size === 1 ? Array.from(activeBoardIds)[0] : boards[0]?.id
+            }
+            onSubmit={(boardId, item) => addMoodItem(boardId, item)}
+          />
+          <AddMoodItemDialog
+            open={editing !== null}
+            onOpenChange={(o) => !o && setEditing(null)}
+            boards={boards}
+            initial={editing?.item}
+            initialBoardId={editing?.boardId}
+            onSubmit={(boardId, updates) => {
+              if (!editing) return;
+              if (boardId !== editing.boardId) {
+                deleteMoodItem(editing.boardId, editing.item.id);
+                addMoodItem(boardId, updates);
+              } else {
+                updateMoodItem(editing.boardId, editing.item.id, updates);
+              }
+            }}
+          />
+          <PromoteToCostDialog
+            open={promoting !== null}
+            onOpenChange={(o) => !o && setPromoting(null)}
+            itemTitle={promoting?.item.title ?? ""}
+            categories={project.categories}
+            onConfirm={(categoryId) => {
+              if (promoting) promoteMoodItemToCost(promoting.boardId, promoting.item.id, categoryId);
+            }}
+          />
+          <CsvUploadDialog
+            open={importOpen}
+            onOpenChange={setImportOpen}
+            onImport={bulkImport}
+            onFullImport={fullImport}
+          />
+        </>
+      )}
     </div>
   );
 }
