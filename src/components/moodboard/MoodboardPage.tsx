@@ -24,6 +24,8 @@ import { AddMoodItemDialog } from "./AddMoodItemDialog";
 import { PromoteToCostDialog } from "./PromoteToCostDialog";
 import { CsvUploadDialog } from "@/components/CsvUploadDialog";
 import { ACCOUNTS } from "@/contexts/UserContext";
+import { detectSource, faviconFor, groupBySource } from "@/lib/moodSources";
+import { Instagram, Globe, Link2 } from "lucide-react";
 import type { MoodBoard, MoodItem } from "@/types/project";
 
 const TAGLINES = [
@@ -65,6 +67,7 @@ export function MoodboardPage({ readOnly }: { readOnly?: boolean }) {
   const [tagline] = useState(() => TAGLINES[Math.floor(Math.random() * TAGLINES.length)]);
   const [activeBoardIds, setActiveBoardIds] = useState<Set<string>>(new Set());
   const [activeUsers, setActiveUsers] = useState<Set<string>>(new Set());
+  const [activeSources, setActiveSources] = useState<Set<string>>(new Set());
 
   const boards = project.moodboard?.boards || [];
   const boardById = useMemo(() => {
@@ -75,6 +78,7 @@ export function MoodboardPage({ readOnly }: { readOnly?: boolean }) {
 
   const showAllBoards = activeBoardIds.size === 0;
   const showAllUsers = activeUsers.size === 0;
+  const showAllSources = activeSources.size === 0;
   const visibleBoards = showAllBoards ? boards : boards.filter((b) => activeBoardIds.has(b.id));
 
   const allItems = useMemo(() => {
@@ -82,10 +86,28 @@ export function MoodboardPage({ readOnly }: { readOnly?: boolean }) {
     visibleBoards.forEach((b) => {
       b.items.forEach((i) => {
         if (!showAllUsers && !activeUsers.has(i.createdBy || "Brian")) return;
+        if (!showAllSources) {
+          const src = detectSource(i.url);
+          if (!src || !activeSources.has(src.key)) return;
+        }
         items.push({ item: i, boardId: b.id });
       });
     });
     return items;
+  }, [visibleBoards, showAllUsers, activeUsers, showAllSources, activeSources]);
+
+  // Source counts derived from items already filtered by board + user (but not source itself)
+  const sourceGroups = useMemo(() => {
+    const itemsForSources: MoodItem[] = [];
+    visibleBoards.forEach((b) =>
+      b.items.forEach((i) => {
+        if (!showAllUsers && !activeUsers.has(i.createdBy || "Brian")) return;
+        itemsForSources.push(i);
+      })
+    );
+    return Array.from(groupBySource(itemsForSources).values()).sort(
+      (a, b) => b.count - a.count
+    );
   }, [visibleBoards, showAllUsers, activeUsers]);
 
   const toggleBoard = (id: string) => {
@@ -102,6 +124,15 @@ export function MoodboardPage({ readOnly }: { readOnly?: boolean }) {
       const next = new Set(prev);
       if (next.has(u)) next.delete(u);
       else next.add(u);
+      return next;
+    });
+  };
+
+  const toggleSource = (key: string) => {
+    setActiveSources((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   };
