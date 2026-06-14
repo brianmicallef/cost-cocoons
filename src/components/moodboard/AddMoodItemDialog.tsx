@@ -17,7 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Wand2, Upload } from "lucide-react";
+import { Loader2, Wand2, Upload, Instagram, Globe } from "lucide-react";
+import { detectSource } from "@/lib/moodSources";
 import type { MoodBoard, MoodItem } from "@/types/project";
 
 interface AddMoodItemDialogProps {
