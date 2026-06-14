@@ -25,14 +25,6 @@ const fmt = (n: number) =>
     maximumFractionDigits: 0,
   }).format(n);
 
-const hostOf = (url?: string) => {
-  if (!url) return null;
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return null;
-  }
-};
 
 interface MoodTileProps {
   item: MoodItem;
@@ -105,14 +97,44 @@ export function MoodTile({
         </div>
       )}
 
-      {/* Category badge */}
-      <div
-        className="absolute top-2 left-2 flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur-sm text-foreground text-[10px] font-medium pl-1.5 pr-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
-        title={board.name}
-      >
-        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: board.color }} />
-        <span className="truncate max-w-[120px]">{board.name}</span>
+      {/* Category + Source badges */}
+      <div className="absolute top-2 left-2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div
+          className="flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur-sm text-foreground text-[10px] font-medium pl-1.5 pr-2 py-0.5 shadow-sm"
+          title={board.name}
+        >
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: board.color }} />
+          <span className="truncate max-w-[120px]">{board.name}</span>
+        </div>
+        {source && onSourceClick && (
+          <button
+            type="button"
+            onClick={(e) => {
+              stop(e);
+              onSourceClick(source.key);
+            }}
+            title={`Filter by ${source.label}`}
+            className="flex items-center gap-1 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm text-foreground text-[10px] font-medium pl-1 pr-2 py-0.5 shadow-sm transition-colors"
+          >
+            {source.kind === "instagram" ? (
+              <Instagram className="h-3 w-3" />
+            ) : source.kind === "site" && faviconFor(source.host) ? (
+              <img
+                src={faviconFor(source.host)!}
+                alt=""
+                className="h-3 w-3 rounded-sm"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
+            ) : (
+              <Globe className="h-3 w-3" />
+            )}
+            <span className="truncate max-w-[120px]">{source.label}</span>
+          </button>
+        )}
       </div>
+
 
       {/* Voting buttons + counts */}
       {!readOnly && (
@@ -221,7 +243,7 @@ export function MoodTile({
         <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
           <p className="text-sm font-medium line-clamp-2 leading-snug">{item.title}</p>
           <div className="flex items-center justify-between mt-0.5 text-xs text-white/80">
-            {host ? <span className="truncate">{host}</span> : <span />}
+            {source ? <span className="truncate">{source.label}</span> : <span />}
             {item.price !== undefined && (
               <span className="font-semibold text-white">{fmt(item.price)}</span>
             )}
@@ -261,10 +283,29 @@ export function MoodTile({
                 <div className="font-semibold text-foreground text-sm">{fmt(item.price)}</div>
               </div>
             )}
-            {host && (
+            {source && (
               <div className="min-w-0">
                 <div className="text-muted-foreground">Source</div>
-                <div className="truncate text-foreground">{host}</div>
+                {onSourceClick ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      stop(e);
+                      onSourceClick(source.key);
+                    }}
+                    className="truncate text-foreground hover:underline inline-flex items-center gap-1 max-w-full"
+                    title={`Filter by ${source.label}`}
+                  >
+                    {source.kind === "instagram" ? (
+                      <Instagram className="h-3 w-3 shrink-0" />
+                    ) : (
+                      <Globe className="h-3 w-3 shrink-0" />
+                    )}
+                    <span className="truncate">{source.label}</span>
+                  </button>
+                ) : (
+                  <div className="truncate text-foreground">{source.label}</div>
+                )}
               </div>
             )}
             <div>
