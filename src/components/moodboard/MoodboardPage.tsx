@@ -437,6 +437,58 @@ export function MoodboardPage({ readOnly }: { readOnly?: boolean }) {
         </div>
         )}
 
+        {/* Source filter bar */}
+        {sourceGroups.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Link2 className="h-3.5 w-3.5" /> Source
+            </div>
+            <button
+              onClick={() => setActiveSources(new Set())}
+              className={`text-xs font-medium rounded-full px-3 py-1 border transition-colors ${
+                showAllSources
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-background text-muted-foreground border-border hover:text-foreground"
+              }`}
+            >
+              Any
+            </button>
+            {sourceGroups.map(({ source, count }) => {
+              const active = activeSources.has(source.key);
+              const favicon = source.kind === "site" ? faviconFor(source.host) : null;
+              return (
+                <button
+                  key={source.key}
+                  onClick={() => toggleSource(source.key)}
+                  title={source.host || source.label}
+                  className={`text-xs font-medium rounded-full pl-1.5 pr-3 py-1 border transition-colors flex items-center gap-1.5 ${
+                    active
+                      ? "bg-foreground text-background border-foreground"
+                      : "bg-background text-foreground border-border hover:bg-muted"
+                  }`}
+                >
+                  {source.kind === "instagram" ? (
+                    <Instagram className="h-3.5 w-3.5" />
+                  ) : favicon ? (
+                    <img
+                      src={favicon}
+                      alt=""
+                      className="h-3.5 w-3.5 rounded-sm"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <Globe className="h-3.5 w-3.5" />
+                  )}
+                  <span className="truncate max-w-[140px]">{source.label}</span>
+                  <span className="opacity-60">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Wall */}
         {boards.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
@@ -473,6 +525,7 @@ export function MoodboardPage({ readOnly }: { readOnly?: boolean }) {
                     onPromote={() => setPromoting({ item, boardId })}
                     onUnpromote={() => unpromoteMoodItem(boardId, item.id)}
                     onVote={(type) => voteMoodItem(boardId, item.id, type)}
+                    onSourceClick={(key) => toggleSource(key)}
                   />
                 </div>
               );
