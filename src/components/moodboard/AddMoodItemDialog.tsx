@@ -17,7 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Wand2, Upload } from "lucide-react";
+import { Loader2, Wand2, Upload, Instagram, Globe } from "lucide-react";
+import { detectSource } from "@/lib/moodSources";
 import type { MoodBoard, MoodItem } from "@/types/project";
 
 interface AddMoodItemDialogProps {
@@ -186,6 +187,22 @@ export function AddMoodItemDialog({
             {fetchError && (
               <p className="text-xs text-muted-foreground">{fetchError}</p>
             )}
+            {(() => {
+              const src = detectSource(url);
+              if (!src) return null;
+              return (
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  {src.kind === "instagram" ? (
+                    <Instagram className="h-3 w-3" />
+                  ) : (
+                    <Globe className="h-3 w-3" />
+                  )}
+                  <span>
+                    Detected source: <span className="font-medium text-foreground">{src.label}</span>
+                  </span>
+                </p>
+              );
+            })()}
           </div>
 
           <div className="space-y-1.5">
