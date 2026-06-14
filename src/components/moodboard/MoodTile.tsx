@@ -11,8 +11,11 @@ import {
   X,
   ThumbsUp,
   ThumbsDown,
+  Instagram,
+  Globe,
 } from "lucide-react";
 import { useCurrentUser } from "@/contexts/UserContext";
+import { detectSource, faviconFor } from "@/lib/moodSources";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-GB", {
@@ -42,6 +45,7 @@ interface MoodTileProps {
   onPromote: () => void;
   onUnpromote: () => void;
   onVote: (type: "up" | "down") => void;
+  onSourceClick?: (key: string) => void;
 }
 
 export function MoodTile({
@@ -55,10 +59,12 @@ export function MoodTile({
   onPromote,
   onUnpromote,
   onVote,
+  onSourceClick,
 }: MoodTileProps) {
   const [imgError, setImgError] = useState(false);
   const currentUser = useCurrentUser();
-  const host = hostOf(item.url);
+  const source = detectSource(item.url);
+  const host = source?.host ?? null;
   const hasImage = item.imageUrl && !imgError;
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
