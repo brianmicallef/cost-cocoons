@@ -100,7 +100,7 @@ export function MoodboardPage({ readOnly }: { readOnly?: boolean }) {
   const toggleUser = (u: string) => {
     setActiveUsers((prev) => {
       const next = new Set(prev);
-      if (next.has-7) next.delete(u);
+      if (next.has(u)) next.delete(u);
       else next.add(u);
       return next;
     });
@@ -443,7 +443,6 @@ export function MoodboardPage({ readOnly }: { readOnly?: boolean }) {
                     onPromote={() => setPromoting({ item, boardId })}
                     onUnpromote={() => unpromoteMoodItem(boardId, item.id)}
                     onVote={(type) => voteMoodItem(boardId, item.id, type)}
-                    onSourceClick={(key) => toggleSource(key)}
                   />
                 </div>
               );
