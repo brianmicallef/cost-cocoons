@@ -541,6 +541,7 @@ export function ProjectTracker() {
           onFullImport={fullImport}
         />
       </main>
+      <BottomNav />
     </div>
   );
 }
