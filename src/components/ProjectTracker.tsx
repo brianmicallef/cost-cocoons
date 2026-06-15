@@ -7,9 +7,11 @@ import { CsvUploadDialog } from "./CsvUploadDialog";
 import { ThemeToggle } from "./ThemeToggle";
 import { TopNav } from "./TopNav";
 import { UserMenu } from "./UserMenu";
+import { BottomNav } from "./BottomNav";
+import { HeaderActions } from "./HeaderActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { House, Plus, AlertTriangle, Upload, Download, ChevronsDownUp, ChevronsUpDown, ChevronRight, ChevronDown, Lightbulb, FileText, Hammer, CheckCircle2, Sparkles } from "lucide-react";
+import { House, Plus, AlertTriangle, ChevronsDownUp, ChevronsUpDown, ChevronRight, ChevronDown, Lightbulb, FileText, Hammer, CheckCircle2, Sparkles } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { ItemStatus } from "@/types/project";
 import {
@@ -325,27 +327,22 @@ export function ProjectTracker() {
             <House className="h-5 w-5 text-accent-foreground" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent flex items-center gap-1.5">
+            <h1 className="text-xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent flex items-center gap-1.5 truncate">
               {project.name}
               <Sparkles className="h-4 w-4 text-accent shrink-0" />
             </h1>
-            <p className="text-sm text-muted-foreground">Stay on budget, stress-free</p>
+            <p className="hidden sm:block text-sm text-muted-foreground">Stay on budget, stress-free</p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap justify-end">
+          <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end">
             <TopNav />
             <ThemeToggle />
-            <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setCsvDialogOpen(true)}>
-              <Upload className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Import</span>
-            </Button>
-            <Button variant="ghost" size="sm" className="rounded-full" onClick={handleExport}>
-              <Download className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Export</span>
-            </Button>
+            <HeaderActions onImport={() => setCsvDialogOpen(true)} onExport={handleExport} />
             <UserMenu />
           </div>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6 pb-24 sm:pb-6">
         {/* Summary cards – cost by status + overspend */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {([
@@ -544,6 +541,7 @@ export function ProjectTracker() {
           onFullImport={fullImport}
         />
       </main>
+      <BottomNav />
     </div>
   );
 }

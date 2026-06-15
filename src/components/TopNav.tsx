@@ -12,7 +12,7 @@ export function TopNav() {
     );
 
   return (
-    <nav className="flex items-center gap-1">
+    <nav className="hidden sm:flex items-center gap-1">
       <NavLink to="/moodboard" className={linkClass}>
         <ImageIcon className="h-4 w-4" /> Moodboard
       </NavLink>

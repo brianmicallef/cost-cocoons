@@ -1,87 +1,38 @@
 ## Goal
 
-When you add a moodboard item with a URL (Instagram account/post, company website, etc.), automatically detect the **source** — handle for Instagram, brand domain otherwise — and display it as a prominent, clickable chip on the tile. Clicking a source chip filters the wall to show only items from that source, alongside the existing category and user filters.
+Make the app comfortable to use on a phone. Focus area you picked: the **top header / navigation**. Filters, grid and dialogs stay as-is for now.
 
-No new "Source" entity, no separate panel. Sources are derived from item URLs, so they stay in sync automatically and require zero extra data entry.
+## What changes on mobile (< 640px)
 
-## What the user will see
+### 1. Header becomes compact
+- Hide the project name's giant gradient on phones; show a shorter single-line title.
+- Drop the tagline on phones (it wraps awkwardly).
+- Header keeps: logo tile, project name (truncated), theme toggle, user avatar/menu.
+- Import / Export move out of the header into an **overflow "More" menu** (three-dot dropdown) on phones. On `sm+` they stay where they are today.
+- `TopNav` (Moodboard / Cost Tracker links) is hidden on phones — replaced by the bottom bar.
 
-**On each tile (when a URL is set)**
-- A small chip near the top-left (next to the category badge on hover, or in the bottom info overlay) showing:
-  - For Instagram URLs: `@handle` with the Instagram glyph
-  - For other sites: the brand/domain (e.g. `vitra.com`) with a favicon
-- Clicking the chip → toggles a source filter on the wall (does not open the URL).
-- A separate "open link" affordance stays in the expanded panel (already exists).
+### 2. New bottom tab bar (phones only)
+- Fixed to the bottom of the viewport, full width, safe-area aware (`pb-[env(safe-area-inset-bottom)]`).
+- Two tabs: **Moodboard** (image icon) and **Cost Tracker** (house icon), each a `NavLink` with active state (filled accent background, label below icon).
+- Hidden on `sm+` (desktop/tablet keep the inline top nav).
+- Main content gets `pb-20 sm:pb-0` so the last row isn't hidden behind the bar.
 
-**Filter bar (new row, only shown when there are detected sources)**
-- "Source" row, similar to the existing Category and "Added by" rows.
-- Each detected source becomes a chip: `@studioshamshiri 4`, `vitra.com 2`, etc.
-- Multi-select, combines with category + user filters.
-- Sources with zero items in the currently visible set are dimmed.
+### 3. Guest view
+- Bottom bar still shows on `/m/...` guest routes for navigation parity, but tabs that require auth are hidden — only Moodboard is shown to guests, and the "Sign in" button stays in the header.
 
-**Add/Edit dialog**
-- After pasting a URL and clicking "Fetch", show a small preview line: `Source: @handle` or `Source: vitra.com` so the user can see what was detected.
-- No new field to fill in.
+## Files
 
-**Expanded item panel**
-- The existing "Source" line (currently shows host like `instagram.com`) is upgraded to show `@handle` for Instagram, brand for others, and becomes a button that applies the source filter.
+- **`src/components/TopNav.tsx`** — add `className` prop; hide via `hidden sm:flex` from header usage.
+- **`src/components/BottomNav.tsx`** *(new)* — fixed bottom bar, `sm:hidden`, two NavLinks with icon + label, active styling using existing accent tokens. Accepts `readOnly` to hide Cost Tracker for guests.
+- **`src/components/HeaderActions.tsx`** *(new, small)* — renders Import / Export buttons inline on `sm+` and collapses them into a `DropdownMenu` (MoreHorizontal icon) on phones. Takes `onImport`, `onExport` props so both pages reuse it.
+- **`src/components/moodboard/MoodboardPage.tsx`** — swap inline Import/Export buttons for `<HeaderActions>`, add `<BottomNav readOnly={readOnly} />` before the closing wrapper, add `pb-20 sm:pb-0` to `<main>`, hide tagline on mobile (`hidden sm:block`), tighten title size on mobile.
+- **`src/components/ProjectTracker.tsx`** — same swap to `<HeaderActions>`, add `<BottomNav />`, `pb-20 sm:pb-0` on `<main>`, hide subtitle on phones.
+- **`src/pages/MoodboardGuest.tsx`** — verify it renders `<MoodboardPage readOnly />` only (no change needed unless it duplicates the header).
 
-## Source detection rules
+## Out of scope (flagged for follow-up)
 
-Pure function, derived on the fly from `item.url`:
+- Moodboard filter chips horizontal scroll on phones.
+- Cost Tracker table density / row tap targets.
+- Dialogs becoming full-screen sheets on phones.
 
-- `instagram.com/<handle>` or `instagram.com/<handle>/...` → `{ kind: 'instagram', key: '@handle', label: '@handle', href: 'https://instagram.com/handle' }`
-- `instagram.com/p/...` or `/reel/...` → no handle in URL; fall back to `{ kind: 'instagram', key: 'instagram', label: 'Instagram' }` (post-level credit isn't in the URL)
-- `tiktok.com/@handle`, `youtube.com/@handle`, `pinterest.com/<user>` → same `@handle` treatment
-- Anything else → `{ kind: 'site', key: 'domain.com', label: 'domain.com', href: origin }` (strip `www.`)
-- No URL → no source chip, no contribution to filter bar.
-
-Two items with the same `key` are considered the same source.
-
-## Filtering behaviour
-
-- New state: `activeSources: Set<string>` (set of source keys).
-- An item passes the source filter if its detected source key is in the active set (or the set is empty).
-- Combined with existing `activeBoardIds` and `activeUsers` filters using AND.
-- Source filter persists while you navigate categories/users; "All" chip clears it.
-
-## Logo / favicon
-
-- Instagram: use the Lucide `Instagram` icon (already available).
-- Other sites: use `https://www.google.com/s2/favicons?domain=<host>&sz=64` as the chip icon. Falls back to a generic Globe icon on error.
-- No upload flow, no extra storage. (If you later want a custom logo per source, that becomes a separate feature — flagged below.)
-
-## Export / import
-
-- Nothing changes in the data model — sources are derived from `item.url`, which is already exported.
-- No schema bump.
-
-## Technical details
-
-**New file: `src/lib/moodSources.ts`**
-- `detectSource(url?: string): { kind: 'instagram' | 'site'; key: string; label: string; href?: string } | null`
-- `groupBySource(items: MoodItem[])` → `Map<key, { source, count }>` for filter bar.
-
-**`MoodboardPage.tsx`**
-- Add `activeSources` state + `toggleSource` + reset in "All".
-- Compute `sourceCounts` from the items visible under category+user filters.
-- Render a third filter row (only if `sourceCounts.size > 0`) styled to match the existing rows.
-- Add source key to the `allItems` filter chain.
-
-**`MoodTile.tsx`**
-- Add `onSourceClick(key: string)` prop.
-- Replace the bare host string in the hover overlay and in the expanded panel's "Source" field with a `SourceChip` rendering icon + label, clickable to call `onSourceClick`.
-
-**`AddMoodItemDialog.tsx`**
-- After successful `handleFetch` (and whenever `url` changes), compute `detectSource(url)` and show a one-line readout under the URL input: `Detected source: @handle`.
-
-**No backend changes, no migration, no edge function changes.** OG fetch already returns image/title; we don't need it for source detection.
-
-## Out of scope (flag for later)
-
-- Editable per-source metadata (custom logo, notes, votes on the source itself).
-- A standalone "Sources" tab/page.
-- Following a source to be notified of new posts.
-- Manually overriding the detected source for an item.
-
-If you later want any of these, the natural next step is to promote a source key into a first-class `Source` entity stored on the project, keyed by the same string so existing tiles keep working.
+Say "looks good" and I'll build it, or tell me what to change.

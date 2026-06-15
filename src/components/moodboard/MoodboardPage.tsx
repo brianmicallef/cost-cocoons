@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopNav } from "@/components/TopNav";
 import { UserMenu } from "@/components/UserMenu";
+import { BottomNav } from "@/components/BottomNav";
+import { HeaderActions } from "@/components/HeaderActions";
 import {
   House,
   Plus,
   Image as ImageIcon,
-  Upload,
-  Download,
   Sparkles,
   Pencil,
   Trash2,
@@ -168,23 +168,18 @@ export function MoodboardPage({ readOnly }: { readOnly?: boolean }) {
             <ImageIcon className="h-5 w-5 text-accent-foreground" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent flex items-center gap-1.5 truncate">
+            <h1 className="text-xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent flex items-center gap-1.5 truncate">
               {project.name}
               <Sparkles className="h-4 w-4 text-accent shrink-0" />
             </h1>
-            <p className="text-sm text-muted-foreground italic">{tagline}</p>
+            <p className="hidden sm:block text-sm text-muted-foreground italic">{tagline}</p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap justify-end">
+          <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end">
             <TopNav />
             <ThemeToggle />
             {!readOnly && (
               <>
-                <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setImportOpen(true)}>
-                  <Upload className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Import</span>
-                </Button>
-                <Button variant="ghost" size="sm" className="rounded-full" onClick={handleExport}>
-                  <Download className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Export</span>
-                </Button>
+                <HeaderActions onImport={() => setImportOpen(true)} onExport={handleExport} />
                 <UserMenu />
               </>
             )}
@@ -205,7 +200,7 @@ export function MoodboardPage({ readOnly }: { readOnly?: boolean }) {
         </div>
       )}
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-5 space-y-3">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-5 space-y-3 pb-24 sm:pb-5">
         {/* Category filter bar */}
         <div className="flex items-center gap-2 flex-wrap">
           <button
@@ -495,6 +490,7 @@ export function MoodboardPage({ readOnly }: { readOnly?: boolean }) {
           />
         </>
       )}
+      <BottomNav readOnly={readOnly} />
     </div>
   );
 }
