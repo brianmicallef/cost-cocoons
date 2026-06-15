@@ -24,8 +24,6 @@ import { AddMoodItemDialog } from "./AddMoodItemDialog";
 import { PromoteToCostDialog } from "./PromoteToCostDialog";
 import { CsvUploadDialog } from "@/components/CsvUploadDialog";
 import { ACCOUNTS } from "@/contexts/UserContext";
-import { detectSource, faviconFor, groupBySource } from "@/lib/moodSources";
-import { Instagram, Globe, Link2 } from "lucide-react";
 import type { MoodBoard, MoodItem } from "@/types/project";
 
 const TAGLINES = [
