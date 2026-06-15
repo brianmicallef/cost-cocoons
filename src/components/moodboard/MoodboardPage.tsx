@@ -12,8 +12,6 @@ import {
   House,
   Plus,
   Image as ImageIcon,
-  Upload,
-  Download,
   Sparkles,
   Pencil,
   Trash2,
@@ -492,6 +490,7 @@ export function MoodboardPage({ readOnly }: { readOnly?: boolean }) {
           />
         </>
       )}
+      <BottomNav readOnly={readOnly} />
     </div>
   );
 }
