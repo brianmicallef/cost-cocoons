@@ -13,7 +13,7 @@ export function BottomNav({ readOnly }: { readOnly?: boolean }) {
 
   return (
     <nav
-      className="sm:hidden fixed bottom-0 inset-x-0 z-20 border-t border-border/60 bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
+      className="sm:hidden fixed bottom-0 inset-x-0 z-20 border-t border-border/60 bg-background/95 backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))]"
       aria-label="Primary"
     >
       <div className="flex items-stretch max-w-5xl mx-auto h-14">
