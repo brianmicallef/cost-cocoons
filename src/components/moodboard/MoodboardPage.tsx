@@ -200,7 +200,7 @@ export function MoodboardPage({ readOnly }: { readOnly?: boolean }) {
         </div>
       )}
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-5 space-y-3 pb-24 sm:pb-5">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-5 space-y-3 pb-32 sm:pb-5">
         {/* Category filter bar */}
         <div className="flex items-center gap-2 flex-wrap">
           <button

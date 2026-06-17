@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export function BottomNav({ readOnly }: { readOnly?: boolean }) {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
-      "flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-medium transition-colors",
+      "flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition-colors",
       isActive
         ? "text-accent-foreground"
         : "text-muted-foreground hover:text-foreground"
@@ -13,11 +13,10 @@ export function BottomNav({ readOnly }: { readOnly?: boolean }) {
 
   return (
     <nav
-      className="sm:hidden fixed bottom-0 inset-x-0 z-20 border-t border-border/60 bg-background/95 backdrop-blur-md"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      className="sm:hidden fixed bottom-0 inset-x-0 z-20 border-t border-border/60 bg-background/95 backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))]"
       aria-label="Primary"
     >
-      <div className="flex items-stretch max-w-5xl mx-auto">
+      <div className="flex items-stretch max-w-5xl mx-auto h-14">
         <NavLink to="/moodboard" className={linkClass}>
           {({ isActive }) => (
             <>
