@@ -253,7 +253,7 @@ export function MoodTile({
         </button>
       )}
       {item.linkedCostItemId && readOnly && (
-        <span className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-success/90 text-success-foreground text-[10px] font-medium px-2 py-0.5 backdrop-blur-sm">
+        <span className="absolute top-10 right-2 flex items-center gap-1 rounded-full bg-success/90 text-success-foreground text-[10px] font-medium px-2 py-0.5 backdrop-blur-sm">
           <Check className="h-3 w-3" /> In costs
         </span>
       )}
