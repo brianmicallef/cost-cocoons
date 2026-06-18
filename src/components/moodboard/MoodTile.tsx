@@ -2,6 +2,11 @@ import { useState } from "react";
 import type { MoodItem, MoodBoard } from "@/types/project";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ExternalLink,
   Pencil,
   Trash2,
@@ -13,6 +18,7 @@ import {
   ThumbsDown,
   Instagram,
   Globe,
+  Maximize2,
 } from "lucide-react";
 import { useCurrentUser } from "@/contexts/UserContext";
 import { detectSource, faviconFor } from "@/lib/moodSources";
