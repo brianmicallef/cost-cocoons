@@ -446,6 +446,19 @@ export function MoodTile({
           </div>
         </div>
       )}
+
+      {/* Image lightbox */}
+      <Dialog open={imageOpen} onOpenChange={setImageOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0 bg-transparent shadow-none">
+          <DialogTitle className="sr-only">{item.title}</DialogTitle>
+          <img
+            src={item.imageUrl}
+            alt={item.title}
+            className="max-w-full max-h-[90vh] w-auto h-auto object-contain rounded-lg shadow-2xl"
+            onError={() => setImgError(true)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
