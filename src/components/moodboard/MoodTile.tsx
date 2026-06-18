@@ -247,7 +247,7 @@ export function MoodTile({
             if (confirm(`Remove "${item.title}" from the cost tracker?`)) onUnpromote();
           }}
           title="In Cost Tracker — click to untick & remove"
-          className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-success/90 hover:bg-success text-success-foreground text-[10px] font-medium px-2 py-0.5 backdrop-blur-sm transition-colors"
+          className="absolute top-10 right-2 flex items-center gap-1 rounded-full bg-success/90 hover:bg-success text-success-foreground text-[10px] font-medium px-2 py-0.5 backdrop-blur-sm transition-colors"
         >
           <Check className="h-3 w-3" /> In costs
         </button>
