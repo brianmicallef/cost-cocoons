@@ -2,6 +2,11 @@ import { useState } from "react";
 import type { MoodItem, MoodBoard } from "@/types/project";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ExternalLink,
   Pencil,
   Trash2,
@@ -13,6 +18,7 @@ import {
   ThumbsDown,
   Instagram,
   Globe,
+  Maximize2,
 } from "lucide-react";
 import { useCurrentUser } from "@/contexts/UserContext";
 import { detectSource, faviconFor } from "@/lib/moodSources";
@@ -54,9 +60,10 @@ export function MoodTile({
   onSourceClick,
 }: MoodTileProps) {
   const [imgError, setImgError] = useState(false);
+  const [imageOpen, setImageOpen] = useState(false);
   const currentUser = useCurrentUser();
   const source = detectSource(item.url);
-  
+
   const hasImage = item.imageUrl && !imgError;
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
@@ -83,13 +90,25 @@ export function MoodTile({
       onClick={onToggleExpand}
     >
       {hasImage ? (
-        <img
-          src={item.imageUrl}
-          alt={item.title}
-          className="w-full h-auto block"
-          loading="lazy"
-          onError={() => setImgError(true)}
-        />
+        <button
+          type="button"
+          className="relative block w-full cursor-zoom-in"
+          onClick={(e) => {
+            stop(e);
+            setImageOpen(true);
+          }}
+        >
+          <img
+            src={item.imageUrl}
+            alt={item.title}
+            className="w-full h-auto block"
+            loading="lazy"
+            onError={() => setImgError(true)}
+          />
+          <span className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <Maximize2 className="h-3.5 w-3.5" />
+          </span>
+        </button>
       ) : (
         <div className="w-full aspect-[4/5] flex flex-col items-center justify-center gap-2 p-4 text-center">
           <ImageOff className="h-8 w-8 text-muted-foreground/40" />
@@ -427,6 +446,19 @@ export function MoodTile({
           </div>
         </div>
       )}
+
+      {/* Image lightbox */}
+      <Dialog open={imageOpen} onOpenChange={setImageOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0 bg-transparent shadow-none">
+          <DialogTitle className="sr-only">{item.title}</DialogTitle>
+          <img
+            src={item.imageUrl}
+            alt={item.title}
+            className="max-w-full max-h-[90vh] w-auto h-auto object-contain rounded-lg shadow-2xl"
+            onError={() => setImgError(true)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
