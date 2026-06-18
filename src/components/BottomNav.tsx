@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export function BottomNav({ readOnly }: { readOnly?: boolean }) {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
-      "flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition-colors",
+      "flex h-full min-w-0 flex-col items-center justify-center gap-1.5 px-2 text-[11px] font-medium leading-none transition-colors",
       isActive
         ? "text-accent-foreground"
         : "text-muted-foreground hover:text-foreground"
@@ -13,16 +13,16 @@ export function BottomNav({ readOnly }: { readOnly?: boolean }) {
 
   return (
     <nav
-      className="sm:hidden fixed bottom-0 inset-x-0 z-20 border-t border-border/60 bg-background/95 backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      className="sm:hidden fixed inset-x-0 bottom-0 z-20 border-t border-border/60 bg-background/95 backdrop-blur-md [padding-bottom:env(safe-area-inset-bottom)]"
       aria-label="Primary"
     >
-      <div className="flex items-stretch max-w-5xl mx-auto">
+      <div className={cn("mx-auto grid h-16 max-w-5xl items-stretch px-2", readOnly ? "grid-cols-1" : "grid-cols-2")}>
         <NavLink to="/moodboard" className={linkClass}>
           {({ isActive }) => (
             <>
               <div
                 className={cn(
-                  "h-8 w-12 rounded-full flex items-center justify-center transition-colors",
+                  "flex h-8 w-12 shrink-0 items-center justify-center rounded-full transition-colors",
                   isActive ? "bg-accent" : "bg-transparent"
                 )}
               >
@@ -38,7 +38,7 @@ export function BottomNav({ readOnly }: { readOnly?: boolean }) {
               <>
                 <div
                   className={cn(
-                    "h-8 w-12 rounded-full flex items-center justify-center transition-colors",
+                    "flex h-8 w-12 shrink-0 items-center justify-center rounded-full transition-colors",
                     isActive ? "bg-accent" : "bg-transparent"
                   )}
                 >
