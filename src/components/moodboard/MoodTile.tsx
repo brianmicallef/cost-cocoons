@@ -60,9 +60,10 @@ export function MoodTile({
   onSourceClick,
 }: MoodTileProps) {
   const [imgError, setImgError] = useState(false);
+  const [imageOpen, setImageOpen] = useState(false);
   const currentUser = useCurrentUser();
   const source = detectSource(item.url);
-  
+
   const hasImage = item.imageUrl && !imgError;
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
