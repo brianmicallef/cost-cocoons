@@ -90,14 +90,7 @@ export function MoodTile({
       onClick={onToggleExpand}
     >
       {hasImage ? (
-        <button
-          type="button"
-          className="relative block w-full cursor-zoom-in"
-          onClick={(e) => {
-            stop(e);
-            setImageOpen(true);
-          }}
-        >
+        <>
           <img
             src={item.imageUrl}
             alt={item.title}
@@ -105,10 +98,18 @@ export function MoodTile({
             loading="lazy"
             onError={() => setImgError(true)}
           />
-          <span className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          <button
+            type="button"
+            onClick={(e) => {
+              stop(e);
+              setImageOpen(true);
+            }}
+            className="absolute top-2 right-2 z-10 h-7 w-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 transition-colors"
+            title="View larger"
+          >
             <Maximize2 className="h-3.5 w-3.5" />
-          </span>
-        </button>
+          </button>
+        </>
       ) : (
         <div className="w-full aspect-[4/5] flex flex-col items-center justify-center gap-2 p-4 text-center">
           <ImageOff className="h-8 w-8 text-muted-foreground/40" />
@@ -246,13 +247,13 @@ export function MoodTile({
             if (confirm(`Remove "${item.title}" from the cost tracker?`)) onUnpromote();
           }}
           title="In Cost Tracker — click to untick & remove"
-          className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-success/90 hover:bg-success text-success-foreground text-[10px] font-medium px-2 py-0.5 backdrop-blur-sm transition-colors"
+          className="absolute top-10 right-2 flex items-center gap-1 rounded-full bg-success/90 hover:bg-success text-success-foreground text-[10px] font-medium px-2 py-0.5 backdrop-blur-sm transition-colors"
         >
           <Check className="h-3 w-3" /> In costs
         </button>
       )}
       {item.linkedCostItemId && readOnly && (
-        <span className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-success/90 text-success-foreground text-[10px] font-medium px-2 py-0.5 backdrop-blur-sm">
+        <span className="absolute top-10 right-2 flex items-center gap-1 rounded-full bg-success/90 text-success-foreground text-[10px] font-medium px-2 py-0.5 backdrop-blur-sm">
           <Check className="h-3 w-3" /> In costs
         </span>
       )}
