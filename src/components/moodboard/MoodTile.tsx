@@ -450,12 +450,31 @@ export function MoodTile({
 
       {/* Image lightbox */}
       <Dialog open={imageOpen} onOpenChange={setImageOpen}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0 bg-transparent shadow-none">
+        <DialogContent
+          className="w-auto max-w-[95vw] max-h-[95vh] p-0 border-0 bg-transparent shadow-none [&>button]:hidden flex items-center justify-center"
+          onClick={(e) => {
+            // close when clicking the empty area around the image
+            if (e.target === e.currentTarget) setImageOpen(false);
+          }}
+        >
           <DialogTitle className="sr-only">{item.title}</DialogTitle>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setImageOpen(false);
+            }}
+            className="absolute -top-2 -right-2 z-10 h-9 w-9 rounded-full bg-background text-foreground shadow-lg flex items-center justify-center hover:bg-muted transition-colors"
+            title="Close"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
           <img
             src={item.imageUrl}
             alt={item.title}
-            className="max-w-full max-h-[90vh] w-auto h-auto object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-[95vw] max-h-[95vh] w-auto h-auto object-contain rounded-lg shadow-2xl"
             onError={() => setImgError(true)}
           />
         </DialogContent>
