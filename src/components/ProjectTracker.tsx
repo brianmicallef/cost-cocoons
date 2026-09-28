@@ -331,30 +331,32 @@ export function ProjectTracker() {
               {project.name}
               <Sparkles className="h-4 w-4 text-accent shrink-0" />
             </h1>
-            <div className="hidden lg:flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
-              <span>Stay on budget, stress-free</span>
-              <span className="text-border/60">·</span>
-              <span className="flex items-baseline gap-1">
-                <span className="font-semibold text-foreground">{fmt(totalBudget)}</span> budget
-              </span>
-              <span className="text-border/60">·</span>
-              <span className="flex items-baseline gap-1">
-                <span className="font-semibold text-foreground">{fmt(spendToDate)}</span> spent
-              </span>
-              <span className="text-border/60">·</span>
-              <span className="flex items-baseline gap-1">
-                <span className={`font-semibold ${totalRemaining < 0 ? "text-destructive" : "text-success"}`}>
-                  {fmt(totalRemaining)}
-                </span>
-                left
-              </span>
-            </div>
+            <p className="hidden lg:block text-sm text-muted-foreground">Stay on budget, stress-free</p>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end">
             <TopNav />
             <ThemeToggle />
             <HeaderActions onImport={() => setCsvDialogOpen(true)} onExport={handleExport} />
             <UserMenu />
+          </div>
+        </div>
+        {/* Financial summary – sits below the nav row, extending towards the Export side */}
+        <div className="hidden lg:flex max-w-5xl mx-auto px-4 sm:px-6 pb-3 -mt-1 justify-end">
+          <div className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
+            <span className="flex items-baseline gap-1">
+              <span className="font-semibold text-foreground">{fmt(totalBudget)}</span> budget
+            </span>
+            <span className="text-border/60">·</span>
+            <span className="flex items-baseline gap-1">
+              <span className="font-semibold text-foreground">{fmt(spendToDate)}</span> spent
+            </span>
+            <span className="text-border/60">·</span>
+            <span className="flex items-baseline gap-1">
+              <span className={`font-semibold ${totalRemaining < 0 ? "text-destructive" : "text-success"}`}>
+                {fmt(totalRemaining)}
+              </span>
+              left
+            </span>
           </div>
         </div>
       </header>
