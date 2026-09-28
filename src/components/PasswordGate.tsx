@@ -1,30 +1,18 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { House, Lock, Eye } from "lucide-react";
-import { ACCOUNTS, AccountName, useUser } from "@/contexts/UserContext";
+import { useUser } from "@/contexts/UserContext";
 import { Link } from "react-router-dom";
 
 export function PasswordGate({ children }: { children: React.ReactNode }) {
   const { authenticated, login } = useUser();
-  const [selected, setSelected] = useState<string>("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selected) {
-      setError("Please select who you are");
-      return;
-    }
-    const ok = login(selected as AccountName, password);
+    const ok = login("Brian", password);
     if (!ok) setError("Incorrect password");
   };
 
@@ -43,29 +31,17 @@ export function PasswordGate({ children }: { children: React.ReactNode }) {
           </p>
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground">Who are you?</label>
-          <Select value={selected} onValueChange={(v) => { setSelected(v); setError(null); }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select your name" />
-            </SelectTrigger>
-            <SelectContent>
-              {ACCOUNTS.map((a) => (
-                <SelectItem key={a} value={a}>{a}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
           <label className="text-xs text-muted-foreground">Password</label>
           <Input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => { setPassword(e.target.value); setError(null); }}
+            autoFocus
           />
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" className="w-full" disabled={!selected || !password}>Enter</Button>
+        <Button type="submit" className="w-full" disabled={!password}>Enter</Button>
         <Link
           to="/moodboard/guest"
           className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors pt-1"
