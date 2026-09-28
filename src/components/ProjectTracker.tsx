@@ -331,7 +331,24 @@ export function ProjectTracker() {
               {project.name}
               <Sparkles className="h-4 w-4 text-accent shrink-0" />
             </h1>
-            <p className="hidden sm:block text-sm text-muted-foreground">Stay on budget, stress-free</p>
+            <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap overflow-hidden">
+              <span className="shrink-0">Stay on budget, stress-free</span>
+              <span className="text-border/60">·</span>
+              <span className="flex items-baseline gap-1 shrink-0">
+                <span className="font-semibold text-foreground">{fmt(totalBudget)}</span> budget
+              </span>
+              <span className="text-border/60">·</span>
+              <span className="flex items-baseline gap-1 shrink-0">
+                <span className="font-semibold text-foreground">{fmt(spendToDate)}</span> spent
+              </span>
+              <span className="text-border/60">·</span>
+              <span className="flex items-baseline gap-1 shrink-0">
+                <span className={`font-semibold ${totalRemaining < 0 ? "text-destructive" : "text-success"}`}>
+                  {fmt(totalRemaining)}
+                </span>
+                <span className="truncate">left incl. {fmt(totalContingency)} contingency</span>
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end">
             <TopNav />
