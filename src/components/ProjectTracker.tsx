@@ -331,7 +331,7 @@ export function ProjectTracker() {
               {project.name}
               <Sparkles className="h-4 w-4 text-accent shrink-0" />
             </h1>
-            <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap overflow-hidden">
+            <div className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap overflow-hidden">
               <span className="shrink-0">Stay on budget, stress-free</span>
               <span className="text-border/60">·</span>
               <span className="flex items-baseline gap-1 shrink-0">
@@ -346,7 +346,7 @@ export function ProjectTracker() {
                 <span className={`font-semibold ${totalRemaining < 0 ? "text-destructive" : "text-success"}`}>
                   {fmt(totalRemaining)}
                 </span>
-                <span className="truncate">left incl. {fmt(totalContingency)} contingency</span>
+                left
               </span>
             </div>
           </div>
