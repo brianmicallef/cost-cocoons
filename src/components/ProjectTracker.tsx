@@ -261,12 +261,6 @@ export function ProjectTracker() {
     (s, i) => s + i.payments.reduce((ps, p) => ps + p.amount, 0),
     0
   );
-  const totalSpend = unquotedSpend + quotedSpend + startedSpend + spendToDate + totalContingency;
-  const overspend = allItems.reduce((s, i) => {
-    const itemSpent = i.payments.reduce((ps, p) => ps + p.amount, 0);
-    const remaining = i.predictedCost - itemSpent;
-    return s + (remaining < 0 ? Math.abs(remaining) : 0);
-  }, 0);
 
   // Item counts
   const completedCount = allItems.filter((i) => i.status === 'done').length;
@@ -361,42 +355,15 @@ export function ProjectTracker() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6 pb-32 sm:pb-6">
-        {/* Summary cards – cost by status + overspend */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-4 space-y-5 pb-32 sm:pb-6">
+        {/* Status summary row – cost + count per status, clickable filters */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 items-stretch">
           {([
-            { label: 'Unquoted', value: unquotedSpend, Icon: Lightbulb },
-            { label: 'Quoted', value: quotedSpend, Icon: FileText },
-            { label: 'Started', value: startedSpend, Icon: Hammer },
-            { label: 'Spend to Date', value: spendToDate, Icon: CheckCircle2 },
-          ]).map(({ label, value, Icon }) => (
-            <div key={label} className="rounded-xl border border-border bg-card p-5">
-              <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                <Icon className="h-4 w-4 text-primary" />
-                {label}
-              </p>
-              <p className="text-2xl font-bold text-foreground mt-1">{fmt(value)}</p>
-            </div>
-          ))}
-          <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-              Overspend
-            </p>
-            <p className={`text-2xl font-bold mt-1 ${overspend > 0 ? "text-destructive" : "text-success"}`}>
-              {fmt(overspend)}
-            </p>
-          </div>
-        </div>
-
-        {/* Item count row – clickable filters with progression arrows (left → right) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 items-stretch">
-          {([
-            { status: 'idea' as ItemStatus, label: 'Unquoted', count: unquotedCount, Icon: Lightbulb },
-            { status: 'quote' as ItemStatus, label: 'Quoted', count: quotedCount, Icon: FileText },
-            { status: 'started' as ItemStatus, label: 'Started', count: startedCount, Icon: Hammer },
-            { status: 'done' as ItemStatus, label: 'Completed', count: completedCount, Icon: CheckCircle2 },
-          ]).map(({ status, label, count, Icon }, idx, arr) => {
+            { status: 'idea' as ItemStatus, label: 'Unquoted', value: unquotedSpend, count: unquotedCount, Icon: Lightbulb },
+            { status: 'quote' as ItemStatus, label: 'Quoted', value: quotedSpend, count: quotedCount, Icon: FileText },
+            { status: 'started' as ItemStatus, label: 'Started', value: startedSpend, count: startedCount, Icon: Hammer },
+            { status: 'done' as ItemStatus, label: 'Completed', value: spendToDate, count: completedCount, Icon: CheckCircle2 },
+          ]).map(({ status, label, value, count, Icon }, idx, arr) => {
             const active = visibleStatuses.has(status);
             return (
               <div key={status} className="relative flex items-center">
@@ -409,7 +376,7 @@ export function ProjectTracker() {
                       return next;
                     });
                   }}
-                  className={`flex-1 rounded-xl border p-4 text-left transition-colors cursor-pointer ${
+                  className={`flex-1 rounded-xl border p-3 text-left transition-colors cursor-pointer ${
                     active
                       ? "border-primary bg-primary/10 ring-1 ring-primary/30"
                       : "border-border bg-card opacity-60 hover:opacity-80"
@@ -419,28 +386,35 @@ export function ProjectTracker() {
                     <Icon className="h-3.5 w-3.5 text-primary" />
                     {label}
                   </p>
-                  <p className="text-lg font-bold text-foreground mt-0.5">{count}</p>
+                  <p className="text-lg font-bold text-foreground mt-0.5 leading-tight">{fmt(value)}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {count} {count === 1 ? "item" : "items"}
+                  </p>
                 </button>
                 {idx < arr.length - 1 && (
                   <ChevronRight
-                    className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 z-10"
+                    className="hidden lg:block absolute -right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 z-10"
                     aria-hidden
                   />
                 )}
               </div>
             );
           })}
-          <div className="rounded-xl border border-border bg-card p-4">
+          <div className="rounded-xl border border-border bg-card p-3">
             <p className="text-xs text-muted-foreground">Total Items</p>
-            <p className="text-lg font-bold text-foreground mt-0.5">{totalItemCount}</p>
+            <p className="text-lg font-bold text-foreground mt-0.5 leading-tight">{totalItemCount}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">all statuses</p>
           </div>
-          <div className="rounded-xl border border-border bg-card p-4">
+          <div className="rounded-xl border border-border bg-card p-3">
             <p className="text-xs text-muted-foreground flex items-center gap-1.5">
               <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
               Overbudget
             </p>
-            <p className={`text-lg font-bold mt-0.5 ${overspendCount > 0 ? "text-destructive" : "text-success"}`}>
+            <p className={`text-lg font-bold mt-0.5 leading-tight ${overspendCount > 0 ? "text-destructive" : "text-success"}`}>
               {overspendCount}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {overspendCount === 1 ? "item" : "items"} over
             </p>
           </div>
         </div>
