@@ -261,7 +261,6 @@ export function ProjectTracker() {
     (s, i) => s + i.payments.reduce((ps, p) => ps + p.amount, 0),
     0
   );
-  const totalSpend = unquotedSpend + quotedSpend + startedSpend + spendToDate + totalContingency;
 
   // Item counts
   const completedCount = allItems.filter((i) => i.status === 'done').length;
