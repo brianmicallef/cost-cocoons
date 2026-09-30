@@ -11,6 +11,8 @@ import { CSS } from "@dnd-kit/utilities";
 
 interface CategoryCardProps {
   category: Category;
+  includeContingency?: boolean;
+  contingencyRate?: number;
   forceExpanded?: boolean;
   collapseSignal?: number;
   visibleStatuses?: Set<ItemStatus>;
@@ -54,6 +56,8 @@ function SortableItemWrapper({ id, children }: { id: string; children: React.Rea
 
 export function CategoryCard({
   category,
+  includeContingency = false,
+  contingencyRate = 0,
   forceExpanded,
   collapseSignal,
   visibleStatuses,
@@ -98,6 +102,10 @@ export function CategoryCard({
     0
   );
   const totalRemaining = totalBudget - totalSpent;
+  // Contingency is calculated on what's left to spend in the category
+  const contingencyAmount = includeContingency ? totalRemaining * (contingencyRate / 100) : 0;
+  const shownBudget = totalBudget + contingencyAmount;
+  const shownRemaining = totalRemaining + contingencyAmount;
 
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,7 +229,7 @@ export function CategoryCard({
         <div className="hidden sm:flex items-center gap-6 text-sm">
           <div className="text-right">
             <span className="text-muted-foreground text-xs block">Budget</span>
-            <span className="font-semibold">{fmt(totalBudget)}</span>
+            <span className="font-semibold">{fmt(shownBudget)}</span>
           </div>
           <div className="text-right">
             <span className="text-muted-foreground text-xs block">Spent</span>
@@ -229,8 +237,8 @@ export function CategoryCard({
           </div>
           <div className="text-right">
             <span className="text-muted-foreground text-xs block">Remaining</span>
-            <span className={`font-bold ${totalRemaining < 0 ? "text-destructive" : "text-success"}`}>
-              {fmt(totalRemaining)}
+            <span className={`font-bold ${shownRemaining < 0 ? "text-destructive" : "text-success"}`}>
+              {fmt(shownRemaining)}
             </span>
           </div>
         </div>
@@ -250,7 +258,7 @@ export function CategoryCard({
       <div className="sm:hidden px-5 py-2 grid grid-cols-3 gap-2 text-sm text-center border-t border-border/50">
         <div>
           <span className="text-muted-foreground text-xs block">Budget</span>
-          <span className="font-semibold">{fmt(totalBudget)}</span>
+          <span className="font-semibold">{fmt(shownBudget)}</span>
         </div>
         <div>
           <span className="text-muted-foreground text-xs block">Spent</span>
@@ -258,8 +266,8 @@ export function CategoryCard({
         </div>
         <div>
           <span className="text-muted-foreground text-xs block">Remaining</span>
-          <span className={`font-bold ${totalRemaining < 0 ? "text-destructive" : "text-success"}`}>
-            {fmt(totalRemaining)}
+          <span className={`font-bold ${shownRemaining < 0 ? "text-destructive" : "text-success"}`}>
+            {fmt(shownRemaining)}
           </span>
         </div>
       </div>
