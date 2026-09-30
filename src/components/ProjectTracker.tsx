@@ -7,6 +7,7 @@ import { CsvUploadDialog } from "./CsvUploadDialog";
 import { ThemeToggle } from "./ThemeToggle";
 import { TopNav } from "./TopNav";
 import { UserMenu } from "./UserMenu";
+import { Switch } from "@/components/ui/switch";
 import { BottomNav } from "./BottomNav";
 import { HeaderActions } from "./HeaderActions";
 import { Button } from "@/components/ui/button";
@@ -82,6 +83,7 @@ export function ProjectTracker() {
   const [csvDialogOpen, setCsvDialogOpen] = useState(false);
   const [allExpanded, setAllExpanded] = useState(true);
   const [collapseSignal, setCollapseSignal] = useState(0);
+  const [includeContingency, setIncludeContingency] = useState(true);
   const [visibleStatuses, setVisibleStatuses] = useState<Set<ItemStatus>>(
     new Set(['idea', 'quote', 'started'] as ItemStatus[])
   );
@@ -240,6 +242,9 @@ export function ProjectTracker() {
 
   const totalWithContingency = totalBudget + totalContingency;
   const totalRemaining = totalWithContingency - totalSpent;
+  // Figure shown in the header summary, depending on the contingency toggle
+  const displayedBudget = includeContingency ? totalWithContingency : totalBudget;
+  const displayedLeft = includeContingency ? totalRemaining : totalBudget - totalSpent;
 
   // Flatten all items for summary calculations
   const allItems = project.categories.flatMap((c) => c.items);
@@ -335,10 +340,22 @@ export function ProjectTracker() {
           </div>
         </div>
         {/* Financial summary – sits below the nav row, extending towards the Export side */}
-        <div className="hidden lg:flex max-w-5xl mx-auto px-4 sm:px-6 pb-3 -mt-1 justify-end">
-          <div className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
+        <div className="flex max-w-5xl mx-auto px-4 sm:px-6 pb-3 -mt-1 justify-end items-center gap-x-3 gap-y-1 flex-wrap">
+          <label className="flex items-center gap-1.5 cursor-pointer select-none order-first lg:order-none">
+            <Switch
+              checked={includeContingency}
+              onCheckedChange={setIncludeContingency}
+              aria-label="Include contingency in figures"
+              className="scale-[0.8] -mx-1"
+            />
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              Incl. contingency
+            </span>
+          </label>
+          <div className="hidden lg:flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
             <span className="flex items-baseline gap-1">
-              <span className="font-semibold text-foreground">{fmt(totalBudget)}</span> budget
+              <span className="font-semibold text-foreground">{fmt(displayedBudget)}</span>
+              budget
             </span>
             <span className="text-border/60">·</span>
             <span className="flex items-baseline gap-1">
@@ -346,8 +363,8 @@ export function ProjectTracker() {
             </span>
             <span className="text-border/60">·</span>
             <span className="flex items-baseline gap-1">
-              <span className={`font-semibold ${totalRemaining < 0 ? "text-destructive" : "text-success"}`}>
-                {fmt(totalRemaining)}
+              <span className={`font-semibold ${displayedLeft < 0 ? "text-destructive" : "text-success"}`}>
+                {fmt(displayedLeft)}
               </span>
               left
             </span>
@@ -464,6 +481,8 @@ export function ProjectTracker() {
                 <SortableCategoryWrapper key={cat.id} id={`cat-${cat.id}`}>
                   <CategoryCard
                     category={cat}
+                    includeContingency={includeContingency}
+                    contingencyRate={contingencyRates[cat.id] || 0}
                     forceExpanded={allExpanded}
                     collapseSignal={collapseSignal}
                     visibleStatuses={visibleStatuses}
